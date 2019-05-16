@@ -38,7 +38,7 @@ public class Shader {
 		public MemoryManager.Buffer buffer;
 	}
 
-	public Shader(VkDevice logicalDevice, String fileName, int stage) throws FileNotFoundException, IOException {
+	Shader(VkDevice logicalDevice, String fileName, int stage) throws FileNotFoundException, IOException {
 		this.logicalDevice = logicalDevice;
 		this.stage = stage;
 

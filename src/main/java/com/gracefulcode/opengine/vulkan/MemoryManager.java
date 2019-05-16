@@ -138,7 +138,7 @@ public class MemoryManager {
 	protected ArrayList<Buffer> buffers = new ArrayList<Buffer>();
 	protected VkDevice logicalDevice;
 
-	public MemoryManager(VkDevice logicalDevice) {
+	MemoryManager(VkDevice logicalDevice) {
 		this.logicalDevice = logicalDevice;
 	}
 

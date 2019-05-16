@@ -57,7 +57,7 @@ dependencies {
 }
 
 // Define the main class for the application
-mainClassName = 'com.gracefulcode.WindowedApp'
+mainClassName = 'com.gracefulcode.ComputeApp'
 
 run {
     switch (OperatingSystem.current()) {

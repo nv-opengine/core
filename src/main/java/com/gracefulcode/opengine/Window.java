@@ -14,7 +14,7 @@ public class Window {
 	protected Window.Configuration configuration;
 	protected long id;
 
-	public Window(Window.Configuration configuration) {
+	Window(Window.Configuration configuration) {
 		this.configuration = configuration;
 
 		glfwDefaultWindowHints();

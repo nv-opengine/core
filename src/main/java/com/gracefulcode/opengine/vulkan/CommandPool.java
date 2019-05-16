@@ -15,7 +15,7 @@ public class CommandPool {
 	protected long commandBuffer;
 	protected VkDevice logicalDevice;
 
-	public CommandPool(VkDevice logicalDevice, int queueIndex) {
+	CommandPool(VkDevice logicalDevice, int queueIndex) {
 		this.logicalDevice = logicalDevice;
 
 		LongBuffer pCmdPool = memAllocLong(1);

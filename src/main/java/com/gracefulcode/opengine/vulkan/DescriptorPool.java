@@ -17,7 +17,7 @@ public class DescriptorPool {
 	protected VkDevice logicalDevice;
 	protected long layout;
 
-	public DescriptorPool(VkDevice logicalDevice, long layout) {
+	DescriptorPool(VkDevice logicalDevice, long layout) {
 		this.logicalDevice = logicalDevice;
 		this.layout = layout;
 

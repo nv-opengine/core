@@ -1,23 +1,15 @@
 package com.gracefulcode;
 
 import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.vulkan.VK10.*;
 
 import com.gracefulcode.opengine.WindowManager;
 import com.gracefulcode.opengine.Window;
 import com.gracefulcode.opengine.vulkan.Vulkan;
-import com.gracefulcode.opengine.vulkan.MemoryManager;
-import com.gracefulcode.opengine.vulkan.Pipeline;
-import com.gracefulcode.opengine.vulkan.Shader;
-
-import java.io.FileNotFoundException;
-import java.io.IOException;
-
 
 import org.lwjgl.glfw.GLFWKeyCallback;
 
 public class WindowedApp {
-	public static void main(String[] args) throws FileNotFoundException, IOException {
+	public static void main(String[] args) {
 		if (!glfwInit()) {
 			throw new RuntimeException("Failed to initialize GLFW");
 		}
