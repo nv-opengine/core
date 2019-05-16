@@ -60,5 +60,14 @@ dependencies {
 mainClassName = 'com.gracefulcode.App'
 
 run {
-    // jvmArgs '-XstartOnFirstThread'
+    switch (OperatingSystem.current()) {
+        case OperatingSystem.LINUX:
+            break
+        case OperatingSystem.MAC_OS:
+            project.ext.lwjglNatives = "natives-macos"
+            jvmArgs '-XstartOnFirstThread'
+            break
+        case OperatingSystem.WINDOWS:
+            break
+    }
 }

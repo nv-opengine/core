@@ -42,6 +42,7 @@ public class DescriptorPool {
 		}
 	}
 
+	// TODO: Rename this silly thing.
 	public void doAThing(MemoryManager.Buffer buffer) {
 		LongBuffer lb = memAllocLong(1);
 		lb.put(layout);
@@ -60,9 +61,10 @@ public class DescriptorPool {
 		}
 		System.out.println("Set is " + lb2.get(0));
 
-		// This is tied directly into the memory manager thing, isn't it?
-		// The memory manager should know what this is for each logical buffer...
-		// This allows multiple, do I ever want multiple?
+		// TODO: This allows multiple, do I ever want multiple?
+		// Answer: Yes. Really we need to pass in an array of them
+		// or have some other way of easily building the array. Even
+		// my simple compute shader is going to have multiple, probably.
 		VkDescriptorBufferInfo.Buffer bufferInfo = VkDescriptorBufferInfo.calloc(1);
 		bufferInfo.clear();
 		bufferInfo.put(buffer.getBufferInfo());
