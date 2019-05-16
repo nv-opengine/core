@@ -29,6 +29,7 @@ public class MemoryManager {
 		protected int optimalMemoryFlags;
 		protected int requiredMemoryFlags;
 		protected int memoryTypeId;
+		protected int descriptorType;
 		protected String name;
 
 		// Used when binding. Not valid until we actually allocate memory
@@ -36,11 +37,21 @@ public class MemoryManager {
 		// TODO: When that happens, fill this out.
 		protected VkDescriptorBufferInfo bufferInfo;
 
-		public Buffer(String name, VkDevice logicalDevice, int bytes, int usage, int sharingMode, int optimalMemoryFlags, int requiredMemoryFlags) {
+		public Buffer(
+			String name,
+			VkDevice logicalDevice,
+			int bytes,
+			int usage,
+			int sharingMode,
+			int optimalMemoryFlags,
+			int requiredMemoryFlags,
+			int descriptorType
+		) {
 			this.name = name;
 			this.logicalDevice = logicalDevice;
 			this.optimalMemoryFlags = optimalMemoryFlags;
 			this.requiredMemoryFlags = requiredMemoryFlags;
+			this.descriptorType = descriptorType;
 
 			VkBufferCreateInfo bufferCreateInfo = VkBufferCreateInfo.calloc();
 			bufferCreateInfo.sType(VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO);
@@ -63,6 +74,10 @@ public class MemoryManager {
 			System.out.println("Asked Size: " + bytes);
 			System.out.println("Size: " + this.requirements.size());
 			System.out.println("Effective Size: " + this.getEffectiveSize());
+		}
+
+		public int getDescriptorType() {
+			return this.descriptorType;
 		}
 
 		public long getId() {
@@ -106,7 +121,7 @@ public class MemoryManager {
 
 	public static class StorageBuffer extends MemoryManager.Buffer {
 		public StorageBuffer(String name, VkDevice logicalDevice, int bytes, int sharingMode, int optimalMemoryFlags, int requiredMemoryFlags) {
-			super(name, logicalDevice, bytes, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, sharingMode, optimalMemoryFlags | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, requiredMemoryFlags);
+			super(name, logicalDevice, bytes, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, sharingMode, optimalMemoryFlags | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, requiredMemoryFlags, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
 		}
 	}
 

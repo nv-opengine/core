@@ -44,7 +44,7 @@ public class DescriptorPool {
 	// TODO: Rename this silly thing.
 	public void doAThing(MemoryManager.Buffer buffer) {
 		LongBuffer lb = memAllocLong(1);
-		lb.put(layout);
+		lb.put(this.layout);
 		lb.flip();
 
 		// Create a descriptor set (should be a different thing)
@@ -60,6 +60,12 @@ public class DescriptorPool {
 		}
 		System.out.println("Set is " + lb2.get(0));
 
+		/**
+		 * VkDescriptorBufferInfo (?) merely says what the buffer *looks like*.
+		 * It's not actually binding to a specific buffer. This can be done far
+		 * in advance if the user gives us enough info.
+		 */
+
 		// TODO: This allows multiple, do I ever want multiple?
 		// Answer: Yes. Really we need to pass in an array of them
 		// or have some other way of easily building the array. Even
@@ -68,6 +74,10 @@ public class DescriptorPool {
 		bufferInfo.clear();
 		bufferInfo.put(buffer.getBufferInfo());
 		bufferInfo.flip();
+
+		/**
+		 * Write descriptor set is what binds it to a specific buffer. We need to split these parts out.
+		 */
 
 		// Set up a descriptor set
 		VkWriteDescriptorSet writeDescriptorSet = VkWriteDescriptorSet.calloc();

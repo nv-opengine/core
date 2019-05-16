@@ -26,6 +26,7 @@ import org.lwjgl.vulkan.VkDescriptorSetLayoutCreateInfo;
 public class Shader {
 	protected long id;
 	protected long layout;
+	protected int stage;
 	protected VkDevice logicalDevice;
 	protected ArrayList<PendingBinding> pendingBindings = new ArrayList<PendingBinding>();
 	protected DescriptorPool descriptorPool;
@@ -39,6 +40,7 @@ public class Shader {
 
 	public Shader(VkDevice logicalDevice, String fileName, int stage) throws FileNotFoundException, IOException {
 		this.logicalDevice = logicalDevice;
+		this.stage = stage;
 
 		ByteBuffer shaderCode = this.fileToByteBuffer(fileName);
 		int err;
@@ -73,9 +75,8 @@ public class Shader {
 		PendingBinding pb = new PendingBinding();
 		pb.bindLocation = bindLocation;
 
-		// TODO: These two shouldn't be constant.
-		pb.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-		pb.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+		pb.descriptorType = buffer.getDescriptorType();
+		pb.stageFlags = this.stage;
 		pb.buffer = buffer;
 
 		this.pendingBindings.add(pb);
@@ -103,6 +104,7 @@ public class Shader {
 		this.layout = lb.get(0);
 
 		this.descriptorPool = new DescriptorPool(this.logicalDevice, this.layout);
+
 		// TODO: This is definitely wrong. We want to essentially pass an array into
 		// this, but it only accepts one. We build the array inside of DescriptorPool,
 		// when it should be built out here?

@@ -20,8 +20,8 @@ import org.lwjgl.PointerBuffer;
 
 import org.lwjgl.vulkan.VkApplicationInfo;
 import org.lwjgl.vulkan.VkBufferCreateInfo;
-import org.lwjgl.vulkan.VkCommandBufferAllocateInfo;
-import org.lwjgl.vulkan.VkCommandPoolCreateInfo;
+// import org.lwjgl.vulkan.VkCommandBufferAllocateInfo;
+// import org.lwjgl.vulkan.VkCommandPoolCreateInfo;
 import org.lwjgl.vulkan.VkDebugReportCallbackCreateInfoEXT;
 import org.lwjgl.vulkan.VkDebugReportCallbackEXT;
 import org.lwjgl.vulkan.VkDevice;
@@ -85,6 +85,8 @@ public class Vulkan {
 	protected VkDevice logicalDevice;
 	protected MemoryManager memoryManager;
 	protected VkInstance instance;
+	protected CommandPool graphicsPool;
+	protected CommandPool computePool;
 
 	// TODO: This probably doesn't belong in Vulkan, but in some other object
 	// you can have more than one of.
@@ -279,58 +281,13 @@ public class Vulkan {
 			throw new AssertionError("Failed to create device: " + translateVulkanResult(err));
 		}
 
-		LongBuffer pCmdPool = memAllocLong(1);
-		PointerBuffer pCommandBuffer = memAllocPointer(1);
-
+		// TODO: If these are the same queue, won't we create two?
 		if (this.configuration.needGraphics) {
-			VkCommandPoolCreateInfo cmdPoolInfo = VkCommandPoolCreateInfo.calloc()
-				.sType(VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO)
-				.queueFamilyIndex(this.graphicsQueueIndex)
-				.flags(VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
-			err = vkCreateCommandPool(this.logicalDevice, cmdPoolInfo, null, pCmdPool);
-			long commandPool = pCmdPool.get(0);
-			cmdPoolInfo.free();
-
-			VkCommandBufferAllocateInfo cmdBufAllocateInfo = VkCommandBufferAllocateInfo.calloc()
-				.sType(VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO)
-				.commandPool(commandPool)
-				.level(VK_COMMAND_BUFFER_LEVEL_PRIMARY)
-				.commandBufferCount(1);
-			err = vkAllocateCommandBuffers(this.logicalDevice, cmdBufAllocateInfo, pCommandBuffer);
-
-			if (err != VK_SUCCESS) {
-				throw new AssertionError("Failed to allocate command buffer: " + translateVulkanResult(err));
-			}
-
-			cmdBufAllocateInfo.free();
-			long commandBuffer = pCommandBuffer.get(0);
+			this.graphicsPool = new CommandPool(this.logicalDevice, this.graphicsQueueIndex);
 		}
 		if (this.configuration.needCompute) {
-			VkCommandPoolCreateInfo cmdPoolInfo = VkCommandPoolCreateInfo.calloc()
-				.sType(VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO)
-				.queueFamilyIndex(this.computeQueueIndex)
-				.flags(VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
-			err = vkCreateCommandPool(this.logicalDevice, cmdPoolInfo, null, pCmdPool);
-
-			if (err != VK_SUCCESS) {
-				throw new AssertionError("Failed to allocate command buffer: " + translateVulkanResult(err));
-			}
-
-			long commandPool = pCmdPool.get(0);
-			cmdPoolInfo.free();
-
-			VkCommandBufferAllocateInfo cmdBufAllocateInfo = VkCommandBufferAllocateInfo.calloc()
-				.sType(VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO)
-				.commandPool(commandPool)
-				.level(VK_COMMAND_BUFFER_LEVEL_PRIMARY)
-				.commandBufferCount(1);
-
-			err = vkAllocateCommandBuffers(this.logicalDevice, cmdBufAllocateInfo, pCommandBuffer);
-			cmdBufAllocateInfo.free();
-			long commandBuffer = pCommandBuffer.get(0);
+			this.computePool = new CommandPool(this.logicalDevice, this.computeQueueIndex);
 		}
-
-		memFree(pCmdPool);
 
 		if (err != VK_SUCCESS) {
 			throw new AssertionError("Failed to create command pool: " + translateVulkanResult(err));
