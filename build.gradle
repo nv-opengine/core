@@ -60,5 +60,5 @@ dependencies {
 mainClassName = 'com.gracefulcode.App'
 
 run {
-    jvmArgs '-XstartOnFirstThread'
+    // jvmArgs '-XstartOnFirstThread'
 }

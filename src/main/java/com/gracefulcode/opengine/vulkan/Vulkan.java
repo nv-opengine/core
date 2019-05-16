@@ -8,6 +8,9 @@ import static org.lwjgl.vulkan.KHRSurface.*;
 import static org.lwjgl.vulkan.KHRSwapchain.*;
 import static org.lwjgl.vulkan.VK10.*;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
@@ -19,6 +22,8 @@ import org.lwjgl.vulkan.VkApplicationInfo;
 import org.lwjgl.vulkan.VkBufferCreateInfo;
 import org.lwjgl.vulkan.VkCommandBufferAllocateInfo;
 import org.lwjgl.vulkan.VkCommandPoolCreateInfo;
+import org.lwjgl.vulkan.VkDebugReportCallbackCreateInfoEXT;
+import org.lwjgl.vulkan.VkDebugReportCallbackEXT;
 import org.lwjgl.vulkan.VkDevice;
 import org.lwjgl.vulkan.VkDeviceCreateInfo;
 import org.lwjgl.vulkan.VkDeviceQueueCreateInfo;
@@ -77,6 +82,7 @@ public class Vulkan {
 	protected VkPhysicalDevice selectedDevice;
 	protected VkDevice logicalDevice;
 	protected MemoryManager memoryManager;
+	protected VkInstance instance;
 
 	// TODO: Do we wrap these?
 	protected int graphicsQueueIndex = -1;
@@ -105,6 +111,14 @@ public class Vulkan {
 		PointerBuffer extensions = this.getExtensions();
 		PointerBuffer layers = this.getLayers();
 
+		for (int i = 0; i < layers.limit(); i++) {
+			String tmp = layers.getStringUTF8(i);
+			if (tmp.equals(VK_EXT_DEBUG_REPORT_EXTENSION_NAME)) {
+				this.setupDebugging();
+			}
+		}
+		layers.flip();
+
 		VkInstanceCreateInfo pCreateInfo = VkInstanceCreateInfo.calloc()
 			.sType(VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO) // <- identifies what kind of struct this is (this is useful for extending the struct type later)
 			.pNext(NULL) // <- must always be NULL until any next Vulkan version tells otherwise
@@ -128,9 +142,9 @@ public class Vulkan {
 
 		// Create an object-oriented wrapper around the simple VkInstance long handle
 		// This is needed by LWJGL to later "dispatch" (i.e. direct calls to) the right Vukan functions.
-		VkInstance ret = new VkInstance(instance, pCreateInfo);
+		this.instance = new VkInstance(instance, pCreateInfo);
 
-		err = vkEnumeratePhysicalDevices(ret, this.ib, null);
+		err = vkEnumeratePhysicalDevices(this.instance, this.ib, null);
 		if (err != VK_SUCCESS) {
 			throw new AssertionError("Failed to get number of physical devices: " + translateVulkanResult(err));
 		}
@@ -138,7 +152,7 @@ public class Vulkan {
 		int numPhysicalDevices = this.ib.get(0);
 
 		PointerBuffer pPhysicalDevices = memAllocPointer(numPhysicalDevices);
-		err = vkEnumeratePhysicalDevices(ret, this.ib, pPhysicalDevices);
+		err = vkEnumeratePhysicalDevices(this.instance, this.ib, pPhysicalDevices);
 		if (err != VK_SUCCESS) {
 			throw new AssertionError("Failed to get physical devices: " + translateVulkanResult(err));
 		}
@@ -148,7 +162,7 @@ public class Vulkan {
 
 		for (int i = 0; i < this.ib.get(0); i++) {
 			long physicalDeviceId = pPhysicalDevices.get(i);
-			VkPhysicalDevice physicalDevice = new VkPhysicalDevice(physicalDeviceId, ret);
+			VkPhysicalDevice physicalDevice = new VkPhysicalDevice(physicalDeviceId, this.instance);
 			VkPhysicalDeviceProperties pProperties = VkPhysicalDeviceProperties.calloc();
 			vkGetPhysicalDeviceProperties(physicalDevice, pProperties);
 
@@ -317,102 +331,65 @@ public class Vulkan {
 		}
 	}
 
+	protected void setupDebugging() {
+		// TODO: Allow this to be changed.
+		int flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT;
+
+		// TODO: Allow this to be changed.
+		final VkDebugReportCallbackEXT callback = new VkDebugReportCallbackEXT() {
+			public int invoke(
+				int flags,
+				int objectType,
+				long object,
+				long location,
+				int messageCode,
+				long pLayerPrefix,
+				long pMessage,
+				long pUserData
+			) {
+				System.err.println("ERROR OCCURED: " + VkDebugReportCallbackEXT.getString(pMessage));
+				return 0;
+			}
+		};
+
+		VkDebugReportCallbackCreateInfoEXT dbgCreateInfo = VkDebugReportCallbackCreateInfoEXT.calloc()
+			.sType(VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT) // <- the struct type
+			.pNext(NULL) // <- must be NULL
+			.pfnCallback(callback) // <- the actual function pointer (in LWJGL a Callback)
+			.pUserData(NULL) // <- any user data provided to the debug report callback function
+			.flags(flags); // <- indicates which kind of messages we want to receive
+
+		LongBuffer pCallback = memAllocLong(1); // <- allocate a LongBuffer (for a non-dispatchable handle)
+		// Actually create the debug report callback
+		int err = vkCreateDebugReportCallbackEXT(this.instance, dbgCreateInfo, null, pCallback);
+		long callbackHandle = pCallback.get(0);
+		memFree(pCallback); // <- and free the LongBuffer
+		dbgCreateInfo.free(); // <- and also the create-info struct
+		if (err != VK_SUCCESS) {
+			throw new AssertionError("Failed to create VkInstance: " + translateVulkanResult(err));
+		}
+        // return callbackHandle;
+	}
+
+	public Shader createComputeShader(String fileName) throws FileNotFoundException, IOException {
+		// Do we want to eventually have some sort of shader controller?
+		Shader shader = new Shader(this.logicalDevice, "comp.spv", VK_SHADER_STAGE_COMPUTE_BIT);
+		return shader;
+	}
+
 	public VkDevice getLogicalDevice() {
 		return this.logicalDevice;
 	}
 
-	// TODO: Clean this up! Lots of leaked memory!
-	public MemoryManager.Buffer createComputeBuffer(int bytes) {
-		return this.memoryManager.createExclusiveComputeBuffer(bytes);
-
-		/*
-		VkMemoryRequirements memoryRequirements = VkMemoryRequirements.calloc();
-		vkGetBufferMemoryRequirements(this.logicalDevice, buffer.get(0), memoryRequirements);
-
-		System.out.println("Alignment: " + memoryRequirements.alignment());
-		System.out.println("Memory Type: " + memoryRequirements.memoryTypeBits());
-		System.out.println("Size: " + memoryRequirements.size());
-
-		VkMemoryAllocateInfo allocateInfo = VkMemoryAllocateInfo.calloc();
-		allocateInfo.sType(VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO);
-		allocateInfo.allocationSize(memoryRequirements.size());
-
-		VkPhysicalDeviceMemoryProperties memoryProperties = VkPhysicalDeviceMemoryProperties.calloc();
-		vkGetPhysicalDeviceMemoryProperties(this.selectedDevice, memoryProperties);
-
-		System.out.println("Heap Count: " + memoryProperties.memoryHeapCount());
-		System.out.println("Type Count: " + memoryProperties.memoryTypeCount());
-
-		VkMemoryHeap.Buffer memoryHeaps = memoryProperties.memoryHeaps();
-		for (int i = 0; i < memoryProperties.memoryHeapCount(); i++) {
-			memoryHeaps.position(i);
-
-			// VK_MEMORY_HEAP_DEVICE_LOCAL_BIT = 0x00000001,
-			// VK_MEMORY_HEAP_MULTI_INSTANCE_BIT = 0x00000002,
-			// VK_MEMORY_HEAP_MULTI_INSTANCE_BIT_KHR = VK_MEMORY_HEAP_MULTI_INSTANCE_BIT,
-			// VK_MEMORY_HEAP_FLAG_BITS_MAX_ENUM = 0x7FFFFFFF
-
-			System.out.println("Heap(" + i + ").flags: " + Integer.toBinaryString(memoryHeaps.flags()));
-			System.out.println("Heap(" + i + ").size: " + memoryHeaps.size());
-		}
-
-		int acceptableIndex = -1;
-		// TODO: Make this configurable somehow? Don't want to just expose it.
-		int wantedFlags = VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
-
-		VkMemoryType.Buffer memoryTypes = memoryProperties.memoryTypes();
-		for (int i = 0; i < memoryProperties.memoryTypeCount(); i++) {
-			memoryTypes.position(i);
-			System.out.println("Type(" + i + ").heapIndex: " + memoryTypes.heapIndex());
-
-			// Mac has:
-			//		DeviceLocal
-			//		DeviceLocal & HostVisible & HostCached
-			//		DeviceLocal & HostVisible & HostCoherent & HostCached
-			// VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT = 0x00000001,
-			// VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT = 0x00000002,
-			// VK_MEMORY_PROPERTY_HOST_COHERENT_BIT = 0x00000004,
-			// VK_MEMORY_PROPERTY_HOST_CACHED_BIT = 0x00000008,
-			// VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT = 0x00000010,
-			// VK_MEMORY_PROPERTY_PROTECTED_BIT = 0x00000020,
-			// VK_MEMORY_PROPERTY_FLAG_BITS_MAX_ENUM = 0x7FFFFFFF
-
-			System.out.println("Type(" + i + ").propertyFlags: " + Integer.toBinaryString(memoryTypes.propertyFlags()));
-
-			if ((memoryTypes.propertyFlags() & wantedFlags) == wantedFlags) acceptableIndex = i;
-		}
-
-		if (acceptableIndex == -1) {
-			throw new AssertionError("Could not create queue with appropriate types of memory.");
-		}
-
-		allocateInfo.memoryTypeIndex(acceptableIndex);
-
-		LongBuffer bufferMemory = memAllocLong(1);
-		err = vkAllocateMemory(this.logicalDevice, allocateInfo, null, bufferMemory);
-		if (err != VK_SUCCESS) {
-			throw new AssertionError("Failed to allocate memory: " + Vulkan.translateVulkanResult(err));			
-		}
-
-		err = vkBindBufferMemory(
-			this.logicalDevice,
-			buffer.get(0),
-			bufferMemory.get(0),
-			// This is the offset. This is how we handle memory management
-			// correctly.
-			// TODO: Allocate some big buffers up-front and then bind buffer
-			// memory piecemeal with offsets.
-			0
-		);
-		if (err != VK_SUCCESS) {
-			throw new AssertionError("Failed to bind memory: " + Vulkan.translateVulkanResult(err));			
-		}
-
-		return buffer.get(0);
-		*/
+	public void doneAllocating() {
+		this.memoryManager.doneAllocating();
 	}
 
-	protected void dispose() {
+	public MemoryManager.Buffer createComputeBuffer(String name, int bytes) {
+		return this.memoryManager.createExclusiveComputeBuffer(name, bytes);
+	}
+
+	public void dispose() {
 		memFree(this.ib);
 	}
 

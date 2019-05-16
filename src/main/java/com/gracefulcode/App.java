@@ -38,8 +38,12 @@ public class App {
 		vulkanConfiguration.needCompute = true;
 
 		Vulkan vulkan = new Vulkan(vulkanConfiguration);
-		MemoryManager.Buffer buffer = vulkan.createComputeBuffer(1023);
-		Shader shader = new Shader(vulkan.getLogicalDevice(), "comp.spv", VK_SHADER_STAGE_COMPUTE_BIT);
+		MemoryManager.Buffer buffer = vulkan.createComputeBuffer("Compute: Input", 1023);
+		vulkan.doneAllocating();
+		
+		Shader shader = vulkan.createComputeShader("comp.spv");
+		shader.createBinding(0, buffer);
+		shader.doneBinding();
 
 		// WindowManager windowManager = new WindowManager(wmConfiguration);
 		// Window window = windowManager.createWindow();
@@ -49,5 +53,7 @@ public class App {
 		// 	boolean shouldClose = windowManager.tick();
 		// 	if (shouldClose) break;
 		// }
+
+		vulkan.dispose();
     }
 }
