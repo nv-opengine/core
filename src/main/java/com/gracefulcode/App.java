@@ -7,6 +7,7 @@ import static org.lwjgl.vulkan.VK10.*;
 // import com.gracefulcode.opengine.Window;
 import com.gracefulcode.opengine.vulkan.Vulkan;
 import com.gracefulcode.opengine.vulkan.MemoryManager;
+import com.gracefulcode.opengine.vulkan.Pipeline;
 import com.gracefulcode.opengine.vulkan.Shader;
 
 import java.io.FileNotFoundException;
@@ -50,6 +51,8 @@ public class App {
 		shader.createBinding(0, bufferA);
 		shader.createBinding(1, bufferB);
 		shader.doneBinding();
+
+		Pipeline computePipeline = vulkan.createComputePipeline(shader, "main");
 
 		// WindowManager windowManager = new WindowManager(wmConfiguration);
 		// Window window = windowManager.createWindow();

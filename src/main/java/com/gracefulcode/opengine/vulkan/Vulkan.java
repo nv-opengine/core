@@ -38,6 +38,8 @@ import org.lwjgl.vulkan.VkMemoryType;
 import org.lwjgl.vulkan.VkPhysicalDevice;
 import org.lwjgl.vulkan.VkPhysicalDeviceMemoryProperties;
 import org.lwjgl.vulkan.VkPhysicalDeviceProperties;
+import org.lwjgl.vulkan.VkPipelineLayoutCreateInfo;
+import org.lwjgl.vulkan.VkPipelineShaderStageCreateInfo;
 import org.lwjgl.vulkan.VkQueueFamilyProperties;
 
 /**
@@ -83,6 +85,10 @@ public class Vulkan {
 	protected VkDevice logicalDevice;
 	protected MemoryManager memoryManager;
 	protected VkInstance instance;
+
+	// TODO: This probably doesn't belong in Vulkan, but in some other object
+	// you can have more than one of.
+	protected long pipelineLayoutId;
 
 	// TODO: Do we wrap these?
 	protected int graphicsQueueIndex = -1;
@@ -329,6 +335,36 @@ public class Vulkan {
 		if (err != VK_SUCCESS) {
 			throw new AssertionError("Failed to create command pool: " + translateVulkanResult(err));
 		}
+	}
+
+	/**
+	 * A pipeline layout defines what arguments we're going to be passing to
+	 * our pipeline. In the case of a compute pipeline, this is basically the
+	 * set of inputs.
+	 */
+	public Pipeline createComputePipeline(Shader shader, String entryMethod) {
+		VkPipelineShaderStageCreateInfo stageCreate = VkPipelineShaderStageCreateInfo.calloc();
+		stageCreate.sType(VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO);
+		stageCreate.stage(VK_SHADER_STAGE_COMPUTE_BIT);
+		stageCreate.module(shader.getId());
+		stageCreate.pName(memUTF8(entryMethod));
+
+		LongBuffer lb = memAllocLong(1);
+		lb.put(shader.getLayout());
+		lb.flip();
+
+		VkPipelineLayoutCreateInfo pipelineCreate = VkPipelineLayoutCreateInfo.calloc();
+		pipelineCreate.sType(VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO);
+		pipelineCreate.pSetLayouts(lb);
+
+		LongBuffer lb2 = memAllocLong(1);
+		int err = vkCreatePipelineLayout(this.logicalDevice, pipelineCreate, null, lb2);
+		if (err != VK_SUCCESS) {
+			throw new AssertionError("Failed to create pipeline layout: " + Vulkan.translateVulkanResult(err));
+		}
+		this.pipelineLayoutId = lb2.get(0);
+
+		return null;
 	}
 
 	protected void setupDebugging() {

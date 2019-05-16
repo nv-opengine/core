@@ -6,10 +6,12 @@ import static org.lwjgl.vulkan.VK10.*;
 import java.lang.Math;
 import java.nio.LongBuffer;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import org.lwjgl.vulkan.VkBufferCreateInfo;
 import org.lwjgl.vulkan.VkDescriptorBufferInfo;
 import org.lwjgl.vulkan.VkDevice;
+import org.lwjgl.vulkan.VkMemoryAllocateInfo;
 import org.lwjgl.vulkan.VkMemoryHeap;
 import org.lwjgl.vulkan.VkMemoryRequirements;
 import org.lwjgl.vulkan.VkMemoryType;
@@ -63,19 +65,26 @@ public class MemoryManager {
 			System.out.println("Effective Size: " + this.getEffectiveSize());
 		}
 
+		public long getId() {
+			return this.id;
+		}
+
 		public void setMemoryTypeId(int id) {
 			this.memoryTypeId = id;
 		}
 
-		public VkDescriptorBufferInfo getBufferInfo() {
-			return this.bufferInfo;
+		public int getMemoryTypeId() {
+			return this.memoryTypeId;
+		}
 
-			/*
-			VkDescriptorBufferInfo bufferInfo = VkDescriptorBufferInfo.calloc();
-			bufferInfo.buffer(buffer);
-			bufferInfo.offset(0);
-			bufferInfo.range(bufferSize);
-			*/
+		public VkDescriptorBufferInfo getBufferInfo() {
+			if (this.bufferInfo == null) {
+				this.bufferInfo = VkDescriptorBufferInfo.calloc();
+				this.bufferInfo.buffer(this.id);
+				this.bufferInfo.offset(0);
+				this.bufferInfo.range(this.requirements.size());
+			}
+			return this.bufferInfo;
 		}
 
 		public long getEffectiveSize() {
@@ -130,6 +139,8 @@ public class MemoryManager {
 		vkGetPhysicalDeviceMemoryProperties(this.logicalDevice.getPhysicalDevice(), memoryProperties);
 
 		VkMemoryType.Buffer memoryTypes = memoryProperties.memoryTypes();
+		HashMap<Integer, ArrayList<Buffer>> memoryTypeToBuffer = new HashMap<Integer, ArrayList<Buffer>>();
+
 		for (Buffer buffer: this.buffers) {
 			// Find the first memory type that satisifes their requirements.
 			// Vendors are encouraged to put their highest performing memory
@@ -141,6 +152,14 @@ public class MemoryManager {
 				if (buffer.isOptimal(i, memoryTypes.propertyFlags())) {
 					// Pick this one!
 					System.out.println("Picking memory id " + i + " (optimal)");
+
+					ArrayList<Buffer> ab = memoryTypeToBuffer.get(i);
+					if (ab == null) {
+						ab = new ArrayList<Buffer>();
+					}
+					ab.add(buffer);
+					memoryTypeToBuffer.put(i, ab);
+
 					buffer.setMemoryTypeId(i);
 					found = true;
 					break;
@@ -154,6 +173,14 @@ public class MemoryManager {
 				if (buffer.isAcceptable(i, memoryTypes.propertyFlags())) {
 					// Pick this one!
 					System.out.println("Picking memory id " + i + " (acceptable)");
+
+					ArrayList<Buffer> ab = memoryTypeToBuffer.get(i);
+					if (ab == null) {
+						ab = new ArrayList<Buffer>();
+					}
+					ab.add(buffer);
+					memoryTypeToBuffer.put(i, ab);
+
 					buffer.setMemoryTypeId(i);
 					found = true;
 					break;
@@ -165,38 +192,40 @@ public class MemoryManager {
 			throw new AssertionError("Could not find a suitable set of memory for a buffer.");
 		}
 
-		/**
+		for (Integer i: memoryTypeToBuffer.keySet()) {
+			ArrayList<Buffer> buffers = memoryTypeToBuffer.get(i);
+			int totalBytes = 0;
+			for (Buffer b: buffers) {
+				totalBytes += b.getEffectiveSize();
+			}
+			System.out.println("Determining memory for buffer type " + i + ": " + totalBytes);
 
-		VkMemoryAllocateInfo allocateInfo = VkMemoryAllocateInfo.calloc();
-		allocateInfo.sType(VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO);
-		allocateInfo.allocationSize(memoryRequirements.size());
-		allocateInfo.memoryTypeIndex(acceptableIndex);
+			VkMemoryAllocateInfo allocateInfo = VkMemoryAllocateInfo.calloc();
+			allocateInfo.sType(VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO);
+			allocateInfo.allocationSize(totalBytes);
+			allocateInfo.memoryTypeIndex(i);
 
-		LongBuffer bufferMemory = memAllocLong(1);
-		err = vkAllocateMemory(this.logicalDevice, allocateInfo, null, bufferMemory);
-		if (err != VK_SUCCESS) {
-			throw new AssertionError("Failed to allocate memory: " + Vulkan.translateVulkanResult(err));			
+			LongBuffer bufferMemory = memAllocLong(1);
+			int err = vkAllocateMemory(this.logicalDevice, allocateInfo, null, bufferMemory);
+			if (err != VK_SUCCESS) {
+				throw new AssertionError("Failed to allocate memory: " + Vulkan.translateVulkanResult(err));
+			}
+
+			long bufferMemoryId = bufferMemory.get(0);
+
+			int offset = 0;
+			for (Buffer b: buffers) {
+				err = vkBindBufferMemory(
+					this.logicalDevice,
+					b.getId(),
+					bufferMemoryId,
+					offset
+				);
+				if (err != VK_SUCCESS) {
+					throw new AssertionError("Failed to bind memory: " + Vulkan.translateVulkanResult(err));
+				}
+				offset += b.getEffectiveSize();
+			}
 		}
-
-		err = vkBindBufferMemory(
-			this.logicalDevice,
-			buffer.get(0),
-			bufferMemory.get(0),
-			// This is the offset. This is how we handle memory management
-			// correctly.
-			// TODO: Allocate some big buffers up-front and then bind buffer
-			// memory piecemeal with offsets.
-			0
-		);
-		if (err != VK_SUCCESS) {
-			throw new AssertionError("Failed to bind memory: " + Vulkan.translateVulkanResult(err));			
-		}
-
-		return buffer.get(0);
-
-		 */
-
-
-		throw new AssertionError("Here is where I should allocate memory and segment it up among my buffers.");
 	}
 }

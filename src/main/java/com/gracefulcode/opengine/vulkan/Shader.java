@@ -25,6 +25,7 @@ import org.lwjgl.vulkan.VkDescriptorSetLayoutCreateInfo;
 
 public class Shader {
 	protected long id;
+	protected long layout;
 	protected VkDevice logicalDevice;
 	protected ArrayList<PendingBinding> pendingBindings = new ArrayList<PendingBinding>();
 	protected DescriptorPool descriptorPool;
@@ -60,6 +61,14 @@ public class Shader {
 		}
 	}
 
+	public long getId() {
+		return this.id;
+	}
+
+	public long getLayout() {
+		return this.layout;
+	}
+
 	public void createBinding(int bindLocation, MemoryManager.Buffer buffer) {
 		PendingBinding pb = new PendingBinding();
 		pb.bindLocation = bindLocation;
@@ -91,9 +100,9 @@ public class Shader {
 		if (err != VK_SUCCESS) {
 			throw new AssertionError("Failed");
 		}
-		long ret = lb.get(0);
+		this.layout = lb.get(0);
 
-		this.descriptorPool = new DescriptorPool(this.logicalDevice, ret);
+		this.descriptorPool = new DescriptorPool(this.logicalDevice, this.layout);
 		// TODO: This is definitely wrong. We want to essentially pass an array into
 		// this, but it only accepts one. We build the array inside of DescriptorPool,
 		// when it should be built out here?
