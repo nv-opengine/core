@@ -30,7 +30,6 @@ public class DescriptorPool {
 		VkDescriptorPoolCreateInfo descriptorPoolCreate = VkDescriptorPoolCreateInfo.calloc();
 		descriptorPoolCreate.sType(VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO);
 		descriptorPoolCreate.maxSets(1);
-		// descriptorPoolCreate.poolSizeCount(1);
 		descriptorPoolCreate.pPoolSizes(descriptorPoolSize);
 
 		LongBuffer lb = memAllocLong(1);

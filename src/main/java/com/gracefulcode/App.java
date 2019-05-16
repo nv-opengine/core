@@ -38,11 +38,17 @@ public class App {
 		vulkanConfiguration.needCompute = true;
 
 		Vulkan vulkan = new Vulkan(vulkanConfiguration);
-		MemoryManager.Buffer buffer = vulkan.createComputeBuffer("Compute: Input", 1023);
+		MemoryManager.Buffer bufferA = vulkan.createComputeBuffer("Compute: A", 1023);
+		MemoryManager.Buffer bufferB = vulkan.createComputeBuffer("Compute: B", 1023);
 		vulkan.doneAllocating();
 		
 		Shader shader = vulkan.createComputeShader("comp.spv");
-		shader.createBinding(0, buffer);
+
+		// TODO: I am going to want to swap these back and forth, using last
+		// "frame"'s data as the scratchpad for this "frame." The current
+		// createBinding setup makes that hard/impossible. Rethink?
+		shader.createBinding(0, bufferA);
+		shader.createBinding(1, bufferB);
 		shader.doneBinding();
 
 		// WindowManager windowManager = new WindowManager(wmConfiguration);
