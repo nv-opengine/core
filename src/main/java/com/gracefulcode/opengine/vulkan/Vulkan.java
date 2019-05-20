@@ -366,8 +366,16 @@ public class Vulkan {
 		return this.logicalDevice;
 	}
 
+	public Image clearImage(Image inputImage) {
+		return null;
+	}
+
 	public void doneAllocating() {
 		this.memoryManager.doneAllocating();
+	}
+
+	public Image createFramebufferImage(String name, int bytes) {
+		return this.memoryManager.createFramebufferImage(name, bytes);
 	}
 
 	public MemoryManager.Buffer createComputeBuffer(String name, int bytes) {
@@ -376,6 +384,7 @@ public class Vulkan {
 
 	public void dispose() {
 		memFree(this.ib);
+		vkDestroyInstance(this.instance, null);
 	}
 
 	protected PointerBuffer getLayers() {

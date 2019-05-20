@@ -4,7 +4,9 @@ import static org.lwjgl.glfw.GLFW.*;
 
 import com.gracefulcode.opengine.WindowManager;
 import com.gracefulcode.opengine.Window;
+import com.gracefulcode.opengine.vulkan.Image;
 import com.gracefulcode.opengine.vulkan.Vulkan;
+import com.gracefulcode.opengine.vulkan.VulkanWindow;
 
 import org.lwjgl.glfw.GLFWKeyCallback;
 
@@ -32,8 +34,22 @@ public class WindowedApp {
 		WindowManager windowManager = new WindowManager(wmConfiguration);
 		Window window = windowManager.createWindow();
 
-		while (!windowManager.tick()) {
+		VulkanWindow vulkanWindow = new VulkanWindow(window, vulkan);
 
+		// Set up pipeline!
+		Image frameImage = vulkanWindow.createFramebufferImage();
+		Image clearedImage = vulkan.clearImage(frameImage);
+		vulkanWindow.display(clearedImage);
+
+		// Same thing, more compact.
+		vulkanWindow.display(
+			vulkan.clearImage(
+				vulkanWindow.createFramebufferImage()
+			)
+		);
+
+		while (!windowManager.tick()) {
+			// Do game logic here!
 		}
 
 		vulkan.dispose();

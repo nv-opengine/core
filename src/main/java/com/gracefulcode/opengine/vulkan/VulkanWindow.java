@@ -8,9 +8,11 @@ import com.gracefulcode.opengine.Window;
  */
 public class VulkanWindow {
 	protected Window window;
+	protected Vulkan vulkan;
 
-	public VulkanWindow(Window window) {
+	public VulkanWindow(Window window, Vulkan vulkan) {
 		this.window = window;
+		this.vulkan = vulkan;
 	}
 
 	/**
@@ -23,5 +25,10 @@ public class VulkanWindow {
 	 */
 	public Image createFramebufferImage() {
 		return null;
+	}
+
+	// TODO: Do this.
+	public void display(Image image) {
+
 	}
 }
