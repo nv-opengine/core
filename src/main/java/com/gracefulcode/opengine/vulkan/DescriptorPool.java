@@ -3,6 +3,8 @@ package com.gracefulcode.opengine.vulkan;
 import static org.lwjgl.vulkan.VK10.*;
 import static org.lwjgl.system.MemoryUtil.*;
 
+import com.gracefulcode.opengine.annotations.ThreadInfo;
+
 import java.nio.LongBuffer;
 
 import org.lwjgl.vulkan.VkDescriptorBufferInfo;
@@ -12,6 +14,13 @@ import org.lwjgl.vulkan.VkDescriptorSetAllocateInfo;
 import org.lwjgl.vulkan.VkDevice;
 import org.lwjgl.vulkan.VkWriteDescriptorSet;
 
+/**
+ * A descriptor pool maintains a pool of descriptors, from which descriptor
+ * sets are allocated. Descriptor pools are externally synchronized, meaning
+ * that the application must not allocate and/or free descriptor sets from the
+ * same pool in multiple threads simultaneously.
+ */
+@ThreadInfo( perThread = true )
 public class DescriptorPool {
 	protected long pool;
 	protected VkDevice logicalDevice;

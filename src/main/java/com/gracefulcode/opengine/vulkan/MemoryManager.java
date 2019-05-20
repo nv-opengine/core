@@ -32,6 +32,24 @@ public class MemoryManager {
 		protected int descriptorType;
 		protected String name;
 
+		enum BufferType {
+			EXCLUSIVESTORAGE(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_SHARING_MODE_EXCLUSIVE, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+
+			public int usage;
+			public int sharingMode;
+			public int optimalMemoryFlags;
+			public int requiredMemoryFlags;
+			public int descriptorType;
+
+			private BufferType(int usage, int sharingMode, int optimalMemoryFlags, int requiredMemoryFlags, int descriptorType) {
+				this.usage = usage;
+				this.sharingMode = sharingMode;
+				this.optimalMemoryFlags = optimalMemoryFlags;
+				this.requiredMemoryFlags = requiredMemoryFlags;
+				this.descriptorType = descriptorType;
+			}
+		}
+
 		// Used when binding. Not valid until we actually allocate memory
 		// and segment things up.
 		// TODO: When that happens, fill this out.
@@ -41,11 +59,7 @@ public class MemoryManager {
 			String name,
 			VkDevice logicalDevice,
 			int bytes,
-			int usage,
-			int sharingMode,
-			int optimalMemoryFlags,
-			int requiredMemoryFlags,
-			int descriptorType
+			BufferType bufferType
 		) {
 			this.name = name;
 			this.logicalDevice = logicalDevice;
@@ -56,8 +70,8 @@ public class MemoryManager {
 			VkBufferCreateInfo bufferCreateInfo = VkBufferCreateInfo.calloc();
 			bufferCreateInfo.sType(VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO);
 			bufferCreateInfo.size(bytes);
-			bufferCreateInfo.usage(usage);
-			bufferCreateInfo.sharingMode(sharingMode);
+			bufferCreateInfo.usage(bufferType.usage);
+			bufferCreateInfo.sharingMode(bufferType.sharingMode);
 
 			LongBuffer longBuffer = memAllocLong(1);
 			int err = vkCreateBuffer(this.logicalDevice, bufferCreateInfo, null, longBuffer);
@@ -92,6 +106,10 @@ public class MemoryManager {
 			return this.memoryTypeId;
 		}
 
+		public String getName() {
+			return this.name;
+		}
+
 		public VkDescriptorBufferInfo getBufferInfo() {
 			if (this.bufferInfo == null) {
 				this.bufferInfo = VkDescriptorBufferInfo.calloc();
@@ -108,30 +126,14 @@ public class MemoryManager {
 
 		public boolean isOptimal(int id, int flags) {
 			if ((this.requirements.memoryTypeBits() & (1 << id)) == 0) return false;
-			if ((flags & this.optimalMemoryFlags) == flags) return true;
+			if ((flags & this.optimalMemoryFlags) == this.optimalMemoryFlags) return true;
 			return false;
 		}
 
 		public boolean isAcceptable(int id, int flags) {
 			if ((this.requirements.memoryTypeBits() & (1 << id)) == 0) return false;
-			if ((flags & this.requiredMemoryFlags) == flags) return true;
+			if ((flags & this.requiredMemoryFlags) == this.requiredMemoryFlags) return true;
 			return false;
-		}
-	}
-
-	public static class StorageBuffer extends MemoryManager.Buffer {
-		public StorageBuffer(String name, VkDevice logicalDevice, int bytes, int sharingMode, int optimalMemoryFlags, int requiredMemoryFlags) {
-			super(name, logicalDevice, bytes, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, sharingMode, optimalMemoryFlags | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, requiredMemoryFlags, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
-		}
-	}
-
-	public static class ExclusiveStorageBuffer extends StorageBuffer {
-		public ExclusiveStorageBuffer(String name, VkDevice logicalDevice, int bytes) {
-			this(name, logicalDevice, bytes, 0, 0);
-		}
-
-		public ExclusiveStorageBuffer(String name, VkDevice logicalDevice, int bytes, int optimalMemoryFlags, int requiredMemoryFlags) {
-			super(name, logicalDevice, bytes, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, optimalMemoryFlags, requiredMemoryFlags);
 		}
 	}
 
@@ -143,7 +145,7 @@ public class MemoryManager {
 	}
 
 	public Buffer createExclusiveComputeBuffer(String name, int bytes) {
-		ExclusiveStorageBuffer buffer = new ExclusiveStorageBuffer(name, this.logicalDevice, bytes);
+		Buffer buffer = new Buffer(name, this.logicalDevice, bytes, MemoryManager.Buffer.BufferType.EXCLUSIVESTORAGE);
 		this.buffers.add(buffer);
 		return buffer;
 	}
@@ -204,7 +206,16 @@ public class MemoryManager {
 
 			if (found) continue;
 
-			throw new AssertionError("Could not find a suitable set of memory for a buffer.");
+			String errMessage = "";
+			errMessage += "Could not find a suitable set of memory for buffer: " + buffer.getName();
+			errMessage += "\n";
+			for (int i = 0; i < memoryProperties.memoryTypeCount(); i++) {
+				memoryTypes.position(i);
+				errMessage += "Memory: " + Integer.toBinaryString(memoryTypes.propertyFlags()) + " vs Required: " + Integer.toBinaryString(buffer.requirements.memoryTypeBits());
+				errMessage += "\n";
+			}
+
+			throw new AssertionError(errMessage);
 		}
 
 		for (Integer i: memoryTypeToBuffer.keySet()) {

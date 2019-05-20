@@ -11,7 +11,13 @@ public class WindowManager {
 	}
 
 	protected WindowManager.Configuration configuration;
-	protected ArrayList<Window> openWindows = new ArrayList<Window>();;
+	protected ArrayList<Window> openWindows = new ArrayList<Window>();
+
+	public static void init() {
+		if (!glfwInit()) {
+			throw new RuntimeException("Failed to initialize GLFW");
+		}
+	}
 
 	public WindowManager() {
 		this(new WindowManager.Configuration());

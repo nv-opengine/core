@@ -50,6 +50,7 @@ public class Vulkan {
 		public boolean validation = true;
 		public boolean needGraphics = true;
 		public boolean needCompute = false;
+		public int debugFlags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT;
 		public PhysicalDeviceSelector physicalDeviceSelector = new DefaultPhysicalDeviceSelector();
 
 		/**
@@ -102,12 +103,6 @@ public class Vulkan {
 			throw new AssertionError("GLFW failed to find the Vulkan loader");
 		}
 
-		VkApplicationInfo appInfo = VkApplicationInfo.calloc()
-			.sType(VK_STRUCTURE_TYPE_APPLICATION_INFO)
-			.pApplicationName(memUTF8(this.configuration.applicationName))
-			.pEngineName(memUTF8("GOTBK"))
-			.apiVersion(VK_MAKE_VERSION(1, 0, 2));
-
 		PointerBuffer extensions = this.getExtensions();
 		PointerBuffer layers = this.getLayers();
 
@@ -117,7 +112,12 @@ public class Vulkan {
 				this.setupDebugging();
 			}
 		}
-		layers.flip();
+
+		VkApplicationInfo appInfo = VkApplicationInfo.calloc()
+			.sType(VK_STRUCTURE_TYPE_APPLICATION_INFO)
+			.pApplicationName(memUTF8(this.configuration.applicationName))
+			.pEngineName(memUTF8("GOTBK"))
+			.apiVersion(VK_MAKE_VERSION(1, 0, 2));
 
 		VkInstanceCreateInfo pCreateInfo = VkInstanceCreateInfo.calloc()
 			.sType(VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO) // <- identifies what kind of struct this is (this is useful for extending the struct type later)
@@ -130,6 +130,7 @@ public class Vulkan {
 		int err = vkCreateInstance(pCreateInfo, null, pInstance); // <- actually create the VkInstance now!
 		long instance = pInstance.get(0); // <- get the VkInstance handle
 		memFree(pInstance); // <- free the PointerBuffer
+
 
 		// One word about freeing memory:
 		// Every host-allocated memory directly or indirectly referenced via a parameter to any Vulkan function can always
@@ -317,8 +318,7 @@ public class Vulkan {
 	}
 
 	protected void setupDebugging() {
-		// TODO: Allow this to be changed.
-		int flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT;
+		int flags = this.configuration.debugFlags;
 
 		// TODO: Allow this to be changed.
 		final VkDebugReportCallbackEXT callback = new VkDebugReportCallbackEXT() {

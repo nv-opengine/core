@@ -10,10 +10,7 @@ import org.lwjgl.glfw.GLFWKeyCallback;
 
 public class WindowedApp {
 	public static void main(String[] args) {
-		if (!glfwInit()) {
-			throw new RuntimeException("Failed to initialize GLFW");
-		}
-
+		WindowManager.init();
 		WindowManager.Configuration wmConfiguration = new WindowManager.Configuration();
 		wmConfiguration.defaultWindowConfiguration = new Window.Configuration();
 
@@ -30,7 +27,7 @@ public class WindowedApp {
 		vulkanConfiguration.needGraphics = true;
 		vulkanConfiguration.needCompute = false;
 
-		// Vulkan vulkan = new Vulkan(vulkanConfiguration);
+		Vulkan vulkan = new Vulkan(vulkanConfiguration);
 
 		WindowManager windowManager = new WindowManager(wmConfiguration);
 		Window window = windowManager.createWindow();
@@ -39,6 +36,6 @@ public class WindowedApp {
 
 		}
 
-		// vulkan.dispose();
+		vulkan.dispose();
     }
 }
