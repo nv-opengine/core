@@ -9,6 +9,11 @@ public class Window {
 		public int width = 800;
 		public int height = 600;
 		public GLFWKeyCallback keyCallback = null;
+		// Clear color. Most efficient if all of {r, g, b} 0 or all 255.
+		public int clearR = 0;
+		public int clearG = 0;
+		public int clearB = 0;
+		public int clearA = 255;
 	}
 
 	protected Window.Configuration configuration;
@@ -34,6 +39,10 @@ public class Window {
 		}
 
 		glfwShowWindow(this.id);
+	}
+
+	public long getId() {
+		return this.id;
 	}
 
 	public boolean shouldClose() {

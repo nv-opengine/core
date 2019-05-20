@@ -8,6 +8,8 @@ import static org.lwjgl.vulkan.KHRSurface.*;
 import static org.lwjgl.vulkan.KHRSwapchain.*;
 import static org.lwjgl.vulkan.VK10.*;
 
+import com.gracefulcode.opengine.Window;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
@@ -15,6 +17,8 @@ import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.nio.LongBuffer;
+
+import java.util.ArrayList;
 
 import org.lwjgl.PointerBuffer;
 
@@ -33,6 +37,8 @@ import org.lwjgl.vulkan.VkPhysicalDeviceProperties;
 import org.lwjgl.vulkan.VkPipelineLayoutCreateInfo;
 import org.lwjgl.vulkan.VkPipelineShaderStageCreateInfo;
 import org.lwjgl.vulkan.VkQueueFamilyProperties;
+import org.lwjgl.vulkan.VkSurfaceCapabilitiesKHR;
+import org.lwjgl.vulkan.VkSurfaceFormatKHR;
 
 /**
  * Handles all high-level Vulkan things. Right now this means the VkInstance,
@@ -92,6 +98,9 @@ public class Vulkan {
 	// Reuse this int buffer for many method calls.
 	protected IntBuffer ib = memAllocInt(1);
 
+	protected ArrayList<VulkanWindow> windows = new ArrayList<VulkanWindow>();
+	protected ArrayList<VkPhysicalDevice> physicalDevices = new ArrayList<VkPhysicalDevice>();
+
 	public Vulkan() {
 		this(new Vulkan.Configuration());
 	}
@@ -145,7 +154,20 @@ public class Vulkan {
 		// This is needed by LWJGL to later "dispatch" (i.e. direct calls to) the right Vukan functions.
 		this.instance = new VkInstance(instance, pCreateInfo);
 
-		err = vkEnumeratePhysicalDevices(this.instance, this.ib, null);
+		this.initPhysicalDevices();
+
+		// Don't do this immediately, do it on demand.
+		// this.pickPhysicalDevice();
+	}
+
+	public VulkanWindow createWindow(Window window) {
+		VulkanWindow vw = new VulkanWindow(window, this);
+		this.windows.add(vw);
+		return vw;
+	}
+
+	protected void initPhysicalDevices() {
+		int err = vkEnumeratePhysicalDevices(this.instance, this.ib, null);
 		if (err != VK_SUCCESS) {
 			throw new AssertionError("Failed to get number of physical devices: " + translateVulkanResult(err));
 		}
@@ -158,17 +180,166 @@ public class Vulkan {
 			throw new AssertionError("Failed to get physical devices: " + translateVulkanResult(err));
 		}
 
-		VkPhysicalDevice currentBest = null;
-		VkPhysicalDeviceProperties currentBestProperties = null;
-
 		for (int i = 0; i < this.ib.get(0); i++) {
 			long physicalDeviceId = pPhysicalDevices.get(i);
 			VkPhysicalDevice physicalDevice = new VkPhysicalDevice(physicalDeviceId, this.instance);
+			this.physicalDevices.add(physicalDevice);
+		}
+		memFree(pPhysicalDevices);
+	}
+
+	/**
+	 * TODO: Find some way to let the user choose which device based on these qualities. Right now
+	 * they cannot filter based on these.
+	 */
+	protected boolean deviceIsSuitableForSurface(VkPhysicalDevice physicalDevice, long surface) {
+		VkSurfaceCapabilitiesKHR capabilities = VkSurfaceCapabilitiesKHR.calloc();
+
+		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, capabilities);
+
+		// On mac this seems to always be the full size of the screen. I would expect at least one of these
+		// extents to be the window size...
+		// vulkan-tutorial.com says that it should be the window size...
+		System.out.println("--------------------");
+		System.out.println("Surface Capabilities: Current Extent: Width: " + capabilities.currentExtent().width());
+		System.out.println("Surface Capabilities: Current Extent: Height: " + capabilities.currentExtent().height());
+		// 1 is identity
+		System.out.println("Surface Capabilities: Current Transform: " + Integer.toBinaryString(capabilities.currentTransform()));
+		System.out.println("Surface Capabilities: Max Image Array Layers: " + capabilities.maxImageArrayLayers());
+		System.out.println("Surface Capabilities: Max Image Count: " + capabilities.maxImageCount());
+		System.out.println("Surface Capabilities: Max Image Extent: Width: " + capabilities.maxImageExtent().width());
+		System.out.println("Surface Capabilities: Max Image Extent: Height: " + capabilities.maxImageExtent().height());
+		System.out.println("Surface Capabilities: Min Image Count: " + capabilities.minImageCount());
+		System.out.println("Surface Capabilities: Min Image Extent: Width: " + capabilities.minImageExtent().width());
+		System.out.println("Surface Capabilities: Min Image Extent: Height: " + capabilities.minImageExtent().height());
+		// 0111: Mac
+		// 0001: ALPHA_OPAQUE_BIT
+		// 0010: PRE_MULTIPLIED_BIT
+		// 0100: POST_MULTIPLIED_BIT
+		// 1000: INHERIT_BIT
+		System.out.println("Surface Capabilities: Supported Composite Alpha: " + Integer.toBinaryString(capabilities.supportedCompositeAlpha()));
+		// 000000001: Mac
+		// 000000001: IDENTITY
+		// 000000010: ROTATE_90
+		// 000000100: ROTATE_180
+		// 000001000: ROTATE_270
+		// 000010000: HORIZONTAL_MIRROR
+		// 000100000: HORIZONTAL_MIRROR_ROTATE_90
+		// 001000000: HORIZONTAL_MIRROR_ROTATE_180
+		// 010000000: HORIZONTAL_MIRROR_ROTATE_270
+		// 100000000: INHERIT
+		System.out.println("Surface Capabilities: Supported Transforms: " + Integer.toBinaryString(capabilities.supportedTransforms()));
+		// 00011111: Mac
+		// 00000001: TRANSFER_SRC
+		// 00000010: TRANSFER_DST
+		// 00000100: SAMPLED
+		// 00001000: STORAGE
+		// 00010000: COLOR_ATTACHMENT
+		// 00100000: DEPTH_STENCIL_ATTACHMENT
+		// 01000000: TRANSIENT_ATTACHMENT
+		// 10000000: INPUT_ATTACHMENT
+		System.out.println("Surface Capabilities: Supported Usage Flags: " + Integer.toBinaryString(capabilities.supportedUsageFlags()));
+		System.out.println("--------------------");
+		capabilities.free();
+
+		IntBuffer ib = memAllocInt(1);
+		vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, ib, null);
+
+		if (ib.get(0) == 0) {
+			memFree(ib);
+			return false;
+		}
+
+		System.out.println("Formats: " + ib.get(0));
+
+		VkSurfaceFormatKHR.Buffer formats = VkSurfaceFormatKHR.calloc(ib.get(0));
+		vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, ib, formats);
+
+		for (int i = 0; i < formats.limit(); i++) {
+			formats.position(i);
+			// Mac is 0
+			// Only defined value?!
+			// VK_COLOR_SPACE_SRGB_NONLINEAR_KHR
+			System.out.println("Color Space: " + formats.colorSpace());
+
+			// Mac is 44, 50, 97
+			// VK_FORMAT_B8G8R8A8_UNORM <-- preferred
+			// VK_FORMAT_B8G8R8A8_SRGB
+			// VK_FORMAT_R16G16B16A16_SFLOAT
+			System.out.println("Format: " + formats.format());
+		}
+		formats.free();
+
+		ib.clear();
+		vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, ib, null);
+		System.out.println("Present modes: " + ib.get(0));
+		if (ib.get(0) == 0) {
+			memFree(ib);
+			return false;
+		}
+
+		IntBuffer ib2 = memAllocInt(ib.get(0));
+		vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, ib, ib2);
+		for (int i = 0; i < ib2.limit(); i++) {
+			// Mac has 2, 0
+			// 0: PRESENT_MODE_IMMEDIATE_KHR <-- second if MAILBOX unavailable because FIFO can be buggy
+			// 1: PRESENT_MODE_MAILBOX_KHR <-- preferred
+			// 2: PRESENT_MODE_FIFO_KHR <-- guaranteed to exist, so third choice
+			// 3: PRESENT_MODE_FIFO_RELAXED_KHR
+			System.out.println("Present mode: " + ib2.get(i));
+		}
+
+		return true;
+	}
+
+	public VkPhysicalDevice findPhysicalDeviceForSurface(long surface) {
+		VkPhysicalDevice currentBest = null;
+		VkPhysicalDeviceProperties currentBestProperties = null;
+
+		for (VkPhysicalDevice device: this.physicalDevices) {
 			VkPhysicalDeviceProperties pProperties = VkPhysicalDeviceProperties.calloc();
-			vkGetPhysicalDeviceProperties(physicalDevice, pProperties);
+			vkGetPhysicalDeviceProperties(device, pProperties);
 
 			if (currentBest == null) {
-				currentBest = physicalDevice;
+				if (this.deviceIsSuitableForSurface(device, surface)) {
+					currentBest = device;
+					currentBestProperties = pProperties;
+				}
+				continue;
+			}
+
+			if (this.deviceIsSuitableForSurface(device, surface)) {
+				if (this.configuration.physicalDeviceSelector.compare(pProperties, currentBestProperties) > 0) {
+					currentBestProperties.free();
+					currentBest = device;
+					currentBestProperties = pProperties;
+					continue;
+				}
+			}
+			pProperties.free();
+		}
+
+		if (currentBestProperties != null) {
+			currentBestProperties.free();
+		}
+
+		return currentBest;
+	}
+
+	/**
+	 * TODO: In a windowed context, we need one physical device PER window, potentially. Probably will wind up with the same, but can't be sure.
+	 * But we don't want to make compute contexts impossible, so who owns the physical device?
+	 */
+	protected void pickPhysicalDevice() {
+		VkPhysicalDevice currentBest = null;
+		VkPhysicalDeviceProperties currentBestProperties = null;
+
+		for (VkPhysicalDevice device: this.physicalDevices) {
+			VkPhysicalDeviceProperties pProperties = VkPhysicalDeviceProperties.calloc();
+			vkGetPhysicalDeviceProperties(device, pProperties);
+
+			if (currentBest == null) {
+				currentBest = device;
 				currentBestProperties = pProperties;
 				continue;
 			}
@@ -176,17 +347,20 @@ public class Vulkan {
 			if (this.configuration.physicalDeviceSelector.compare(pProperties, currentBestProperties) > 0) {
 				currentBestProperties.free();
 
-				currentBest = physicalDevice;
+				currentBest = device;
 				currentBestProperties = pProperties;
 			} else {
 				pProperties.free();
 			}
 		}
-		memFree(pPhysicalDevices);
 		currentBestProperties.free();
 
+		// TODO: What if our score for current best is < 0? What if it's completely unsuitable.
+		// Note that since we set currentBest to the first initially, this can happen in theory.
 		this.selectedDevice = currentBest;
+	}
 
+	protected void createLogicalDevice() {
 		vkGetPhysicalDeviceQueueFamilyProperties(this.selectedDevice, this.ib, null);
 		int queueCount = this.ib.get(0);
 		VkQueueFamilyProperties.Buffer queueProps = VkQueueFamilyProperties.calloc(queueCount);
@@ -264,7 +438,7 @@ public class Vulkan {
 			.ppEnabledLayerNames(null);
 
 		PointerBuffer pDevice = memAllocPointer(1);
-		err = vkCreateDevice(this.selectedDevice, deviceCreateInfo, null, pDevice);
+		int err = vkCreateDevice(this.selectedDevice, deviceCreateInfo, null, pDevice);
 		long device = pDevice.get(0);
 		this.logicalDevice = new VkDevice(device, this.selectedDevice, deviceCreateInfo);
 		this.memoryManager = new MemoryManager(this.logicalDevice);
@@ -362,6 +536,10 @@ public class Vulkan {
 		return shader;
 	}
 
+	public VkInstance getInstance() {
+		return this.instance;
+	}
+
 	public VkDevice getLogicalDevice() {
 		return this.logicalDevice;
 	}
@@ -419,6 +597,14 @@ public class Vulkan {
 		if (requiredExtensions == null) {
 			throw new AssertionError("Failed to find list of required Vulkan extensions");
 		}
+
+		for (int i = 0; i < requiredExtensions.limit(); i++) {
+			requiredExtensions.position(i);
+			System.out.println(
+				requiredExtensions.getStringUTF8()
+			);
+		}
+		requiredExtensions.flip();
 
 		vkEnumerateInstanceExtensionProperties((ByteBuffer)null, this.ib, null);
 		int result = this.ib.get(0);

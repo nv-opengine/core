@@ -32,9 +32,8 @@ public class WindowedApp {
 		Vulkan vulkan = new Vulkan(vulkanConfiguration);
 
 		WindowManager windowManager = new WindowManager(wmConfiguration);
-		Window window = windowManager.createWindow();
-
-		VulkanWindow vulkanWindow = new VulkanWindow(window, vulkan);
+		// TODO: Do I want to simplify this?
+		VulkanWindow vulkanWindow = vulkan.createWindow(windowManager.createWindow());
 
 		// Set up pipeline!
 		Image frameImage = vulkanWindow.createFramebufferImage();
