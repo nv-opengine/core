@@ -15,7 +15,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import java.nio.ByteBuffer;
-import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.nio.LongBuffer;
 
@@ -28,19 +27,13 @@ import org.lwjgl.vulkan.VkApplicationInfo;
 import org.lwjgl.vulkan.VkDebugReportCallbackCreateInfoEXT;
 import org.lwjgl.vulkan.VkDebugReportCallbackEXT;
 import org.lwjgl.vulkan.VkDevice;
-import org.lwjgl.vulkan.VkDeviceCreateInfo;
-import org.lwjgl.vulkan.VkDeviceQueueCreateInfo;
 import org.lwjgl.vulkan.VkExtensionProperties;
 import org.lwjgl.vulkan.VkInstance;
 import org.lwjgl.vulkan.VkInstanceCreateInfo;
 import org.lwjgl.vulkan.VkLayerProperties;
 import org.lwjgl.vulkan.VkPhysicalDevice;
-import org.lwjgl.vulkan.VkPhysicalDeviceProperties;
 import org.lwjgl.vulkan.VkPipelineLayoutCreateInfo;
 import org.lwjgl.vulkan.VkPipelineShaderStageCreateInfo;
-import org.lwjgl.vulkan.VkQueueFamilyProperties;
-import org.lwjgl.vulkan.VkSurfaceCapabilitiesKHR;
-import org.lwjgl.vulkan.VkSurfaceFormatKHR;
 
 /**
  * Handles all high-level Vulkan things. Right now this means the VkInstance,
@@ -78,7 +71,8 @@ public class Vulkan {
 		 */
 		public String[] desiredExtensions = {
 			VK_EXT_DEBUG_REPORT_EXTENSION_NAME,
-			VK_KHR_SWAPCHAIN_EXTENSION_NAME
+			VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+			"VK_EXT_debug_utils"
 		};
 	}
 
@@ -119,13 +113,6 @@ public class Vulkan {
 		PointerBuffer extensions = this.getExtensions();
 		PointerBuffer layers = this.getLayers();
 
-		for (int i = 0; i < layers.limit(); i++) {
-			String tmp = layers.getStringUTF8(i);
-			if (tmp.equals(VK_EXT_DEBUG_REPORT_EXTENSION_NAME)) {
-				this.setupDebugging();
-			}
-		}
-
 		VkApplicationInfo appInfo = VkApplicationInfo.calloc()
 			.sType(VK_STRUCTURE_TYPE_APPLICATION_INFO)
 			.pApplicationName(memUTF8(this.configuration.applicationName))
@@ -138,6 +125,13 @@ public class Vulkan {
 			.pApplicationInfo(appInfo) // <- the application info we created above
 			.ppEnabledExtensionNames(extensions)
 			.ppEnabledLayerNames(layers);
+
+		for (int i = 0; i < layers.limit(); i++) {
+			String tmp = layers.getStringUTF8(i);
+			if (tmp.equals(VK_EXT_DEBUG_REPORT_EXTENSION_NAME)) {
+				this.setupDebugging(pCreateInfo);
+			}
+		}
 
 		PointerBuffer pInstance = memAllocPointer(1); // <- create a PointerBuffer which will hold the handle to the created VkInstance
 		int err = vkCreateInstance(pCreateInfo, null, pInstance); // <- actually create the VkInstance now!
@@ -159,9 +153,6 @@ public class Vulkan {
 		this.instance = new VkInstance(instance, pCreateInfo);
 
 		this.initPhysicalDevices();
-
-		// Don't do this immediately, do it on demand.
-		// this.pickPhysicalDevice();
 	}
 
 	TreeSet<PhysicalDevice> getPhysicalDevices() {
@@ -196,108 +187,6 @@ public class Vulkan {
 		memFree(pPhysicalDevices);
 	}
 
-	protected void createLogicalDevice() {
-		vkGetPhysicalDeviceQueueFamilyProperties(this.selectedDevice, this.ib, null);
-		int queueCount = this.ib.get(0);
-
-		VkQueueFamilyProperties.Buffer queueProps = VkQueueFamilyProperties.calloc(queueCount);
-		vkGetPhysicalDeviceQueueFamilyProperties(this.selectedDevice, this.ib, queueProps);
-
-		// TODO: Things get simpler and possibly more performant if we use the
-		// same queue. As-is we simply take the last one, which is not
-		// necessarily the most performant. Do we want to do what we did with
-		// PhysicalDevice and make there be a Comparator?
-		int queueFamilyIndex;
-		for (queueFamilyIndex = 0; queueFamilyIndex < queueCount; queueFamilyIndex++) {
-			VkQueueFamilyProperties properties = queueProps.get(queueFamilyIndex);
-			int flags = properties.queueFlags();
-
-			if ((flags & VK_QUEUE_GRAPHICS_BIT) != 0)
-				this.graphicsQueueIndex = queueFamilyIndex;
-			if ((flags & VK_QUEUE_COMPUTE_BIT) != 0)
-				this.computeQueueIndex = queueFamilyIndex;
-		}
-
-		// TODO: Do we ever want to make multiple in order to use different
-		// priorities? Do we want to expose that to the user?
-		System.out.println("Graphics: " + this.graphicsQueueIndex);
-		VkQueueFamilyProperties properties = queueProps.get(this.graphicsQueueIndex);
-		System.out.println("\tMax Queues: " + properties.queueCount());
-
-		System.out.println("Compute: " + this.computeQueueIndex);
-		properties = queueProps.get(this.computeQueueIndex);
-		System.out.println("\tMax Queues: " + properties.queueCount());
-
-		// TODO: If we don't have queues on this device, perhaps we can go back
-		// and try a different physical device?
-		if (this.configuration.needGraphics && this.graphicsQueueIndex == -1) {
-			throw new AssertionError("Need graphics, but Vulkan does not support a graphics queue.");
-		}
-
-		if (this.configuration.needCompute && this.computeQueueIndex == -1) {
-			throw new AssertionError("Need compute, but Vulkan does not support a compute queue.");
-		}
-
-		int numQueues = 0;
-		if (this.configuration.needGraphics) numQueues++;
-		if (this.configuration.needCompute) numQueues++;
-
-		if (numQueues == 0) {
-			throw new AssertionError("Asked for zero queues. Vulkan will not be useful without any queues.");
-		}
-
-		// TODO: When/if we have multiple queues, the priorities are actually important.
-		// For now they mean nothing.
-		FloatBuffer pQueuePriorities = memAllocFloat(1).put(0.0f);
-		pQueuePriorities.flip();
-
-		VkDeviceQueueCreateInfo.Buffer queueCreateInfo = VkDeviceQueueCreateInfo.calloc(1);
-
-		int idx = 0;
-		if (this.configuration.needGraphics) {
-			queueCreateInfo.position(idx++);
-			queueCreateInfo.sType(VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO);
-			queueCreateInfo.queueFamilyIndex(this.graphicsQueueIndex);
-			queueCreateInfo.pQueuePriorities(pQueuePriorities);
-		}
-		if (this.configuration.needCompute) {
-			queueCreateInfo.position(idx++);
-			queueCreateInfo.sType(VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO);
-			queueCreateInfo.queueFamilyIndex(this.computeQueueIndex);
-			queueCreateInfo.pQueuePriorities(pQueuePriorities);
-		}
-
-		VkDeviceCreateInfo deviceCreateInfo = VkDeviceCreateInfo.calloc()
-			.sType(VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO)
-			.pNext(NULL)
-			.pQueueCreateInfos(queueCreateInfo)
-			.ppEnabledExtensionNames(null)
-			.ppEnabledLayerNames(null);
-
-		PointerBuffer pDevice = memAllocPointer(1);
-		int err = vkCreateDevice(this.selectedDevice, deviceCreateInfo, null, pDevice);
-		long device = pDevice.get(0);
-		this.logicalDevice = new VkDevice(device, this.selectedDevice, deviceCreateInfo);
-		this.memoryManager = new MemoryManager(this.logicalDevice);
-
-		memFree(pDevice);
-		if (err != VK_SUCCESS) {
-			throw new AssertionError("Failed to create device: " + translateVulkanResult(err));
-		}
-
-		// TODO: If these are the same queue, won't we create two?
-		if (this.configuration.needGraphics) {
-			this.graphicsPool = new CommandPool(this.logicalDevice, this.graphicsQueueIndex);
-		}
-		if (this.configuration.needCompute) {
-			this.computePool = new CommandPool(this.logicalDevice, this.computeQueueIndex);
-		}
-
-		if (err != VK_SUCCESS) {
-			throw new AssertionError("Failed to create command pool: " + translateVulkanResult(err));
-		}
-	}
-
 	/**
 	 * A pipeline layout defines what arguments we're going to be passing to
 	 * our pipeline. In the case of a compute pipeline, this is basically the
@@ -328,32 +217,50 @@ public class Vulkan {
 		return null;
 	}
 
-	protected void setupDebugging() {
-		int flags = this.configuration.debugFlags;
+	private final VkDebugReportCallbackEXT dbgFunc = VkDebugReportCallbackEXT.create(
+        (flags, objectType, object, location, messageCode, pLayerPrefix, pMessage, pUserData) -> {
+            String type;
+            if ((flags & VK_DEBUG_REPORT_INFORMATION_BIT_EXT) != 0) {
+                type = "INFORMATION";
+            } else if ((flags & VK_DEBUG_REPORT_WARNING_BIT_EXT) != 0) {
+                type = "WARNING";
+            } else if ((flags & VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT) != 0) {
+                type = "PERFORMANCE WARNING";
+            } else if ((flags & VK_DEBUG_REPORT_ERROR_BIT_EXT) != 0) {
+                type = "ERROR";
+            } else if ((flags & VK_DEBUG_REPORT_DEBUG_BIT_EXT) != 0) {
+                type = "DEBUG";
+            } else {
+                type = "UNKNOWN";
+            }
 
-		// TODO: Allow this to be changed.
-		final VkDebugReportCallbackEXT callback = new VkDebugReportCallbackEXT() {
-			public int invoke(
-				int flags,
-				int objectType,
-				long object,
-				long location,
-				int messageCode,
-				long pLayerPrefix,
-				long pMessage,
-				long pUserData
-			) {
-				System.err.println("ERROR OCCURED: " + VkDebugReportCallbackEXT.getString(pMessage));
-				return 0;
-			}
-		};
+            System.err.format(
+                "%s: [%s] Code %d : %s\n",
+                type, memASCII(pLayerPrefix), messageCode, VkDebugReportCallbackEXT.getString(pMessage)
+            );
+
+            /*
+             * false indicates that layer should not bail-out of an
+             * API call that had validation failures. This may mean that the
+             * app dies inside the driver due to invalid parameter(s).
+             * That's what would happen without validation layers, so we'll
+             * keep that behavior here.
+             */
+            return VK_FALSE;
+        }
+    );
+
+	protected void setupDebugging(VkInstanceCreateInfo createInfo) {
+		int flags = this.configuration.debugFlags;
 
 		VkDebugReportCallbackCreateInfoEXT dbgCreateInfo = VkDebugReportCallbackCreateInfoEXT.calloc()
 			.sType(VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT) // <- the struct type
 			.pNext(NULL) // <- must be NULL
-			.pfnCallback(callback) // <- the actual function pointer (in LWJGL a Callback)
+			.pfnCallback(dbgFunc) // <- the actual function pointer (in LWJGL a Callback)
 			.pUserData(NULL) // <- any user data provided to the debug report callback function
 			.flags(flags); // <- indicates which kind of messages we want to receive
+
+		createInfo.pNext(dbgCreateInfo.address());
 
 		LongBuffer pCallback = memAllocLong(1); // <- allocate a LongBuffer (for a non-dispatchable handle)
 		// Actually create the debug report callback
@@ -364,7 +271,6 @@ public class Vulkan {
 		if (err != VK_SUCCESS) {
 			throw new AssertionError("Failed to create VkInstance: " + translateVulkanResult(err));
 		}
-        // return callbackHandle;
 	}
 
 	public Shader createComputeShader(String fileName) throws FileNotFoundException, IOException {
