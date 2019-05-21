@@ -38,16 +38,16 @@ public class WindowedApp {
 		VulkanWindow vulkanWindow = vulkan.createWindow(windowManager.createWindow());
 
 		// Set up pipeline!
-		Image frameImage = vulkanWindow.createFramebufferImage();
-		Image clearedImage = vulkan.clearImage(frameImage);
-		vulkanWindow.display(clearedImage);
+		// Image frameImage = vulkanWindow.createFramebufferImage();
+		// Image clearedImage = vulkan.clearImage(frameImage);
+		// vulkanWindow.display(clearedImage);
 
 		// Same thing, more compact.
-		vulkanWindow.display(
-			vulkan.clearImage(
-				vulkanWindow.createFramebufferImage()
-			)
-		);
+		// vulkanWindow.display(
+		// 	vulkan.clearImage(
+		// 		vulkanWindow.createFramebufferImage()
+		// 	)
+		// );
 
 		while (!windowManager.tick()) {
 			// Do game logic here!

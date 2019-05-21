@@ -53,6 +53,8 @@ public class VulkanWindow {
 	 * We have one swapchain per window.
 	 */
 	protected SwapChain swapChain;
+	protected Pipeline pipeline;
+	protected RenderPass renderPass;
 
 	protected String[] requiredExtensions = {
 		VK_KHR_SWAPCHAIN_EXTENSION_NAME
@@ -125,22 +127,7 @@ public class VulkanWindow {
 		// this.memoryManager = new MemoryManager(this.logicalDevice);
 
 		this.swapChain = new SwapChain(this.logicalDevice, this.surface);
-	}
-
-	/**
-	 * Create a generic Image that is configured for the framebuffer of this
-	 * window. That means that it will be suitable for presentation (display),
-	 * and will be the size of the window.
-	 *
-	 * When the window is resized, this image will automatically handle that
-	 * gracefully.
-	 */
-	public Image createFramebufferImage() {
-		return null;
-	}
-
-	// TODO: Do this.
-	public void display(Image image) {
-
+		this.pipeline = new Pipeline(this.swapChain, this.logicalDevice);
+		this.renderPass = new RenderPass(this.swapChain, this.logicalDevice);
 	}
 }
