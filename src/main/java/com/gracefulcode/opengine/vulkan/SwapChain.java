@@ -5,6 +5,9 @@ import static org.lwjgl.vulkan.KHRSwapchain.*;
 import static org.lwjgl.system.MemoryUtil.*;
 import static org.lwjgl.vulkan.VK10.*;
 
+import com.gracefulcode.opengine.ImageView;
+import com.gracefulcode.opengine.LogicalDevice;
+
 import java.nio.IntBuffer;
 import java.nio.LongBuffer;
 
@@ -13,16 +16,17 @@ import org.lwjgl.vulkan.VkSurfaceCapabilitiesKHR;
 import org.lwjgl.vulkan.VkSwapchainCreateInfoKHR;
 
 public class SwapChain {
-	protected VkDevice logicalDevice;
+	protected LogicalDevice logicalDevice;
+	protected long id;
 
-	public SwapChain(VkDevice logicalDevice, long surface) {
+	public SwapChain(LogicalDevice logicalDevice, long surface) {
 		this.logicalDevice = logicalDevice;
 
 		LongBuffer lb = memAllocLong(1);
 		IntBuffer ib = memAllocInt(0);
 
 		VkSurfaceCapabilitiesKHR capabilities = VkSurfaceCapabilitiesKHR.calloc();
-		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(this.logicalDevice.getPhysicalDevice(), surface, capabilities);
+		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(this.logicalDevice.getPhysicalDevice().getDevice(), surface, capabilities);
 
 		VkSwapchainCreateInfoKHR createInfo = VkSwapchainCreateInfoKHR.calloc();
 		createInfo.sType(VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR);
@@ -48,16 +52,37 @@ public class SwapChain {
 		createInfo.oldSwapchain(0);
 
 		int err = vkCreateSwapchainKHR(
-			this.logicalDevice,
+			this.logicalDevice.getDevice(),
 			createInfo,
 			null,
 			lb
 		);
+		createInfo.free();
+
+		this.id = lb.get(0);
+
+		memFree(ib);
+		memFree(lb);
+
+		ib = memAllocInt(1);
+		vkGetSwapchainImagesKHR(this.logicalDevice.getDevice(), this.id, ib, null);
+		lb = memAllocLong(ib.get(0));
+		vkGetSwapchainImagesKHR(this.logicalDevice.getDevice(), this.id, ib, lb);
+		
+		System.out.println("Got " + ib.get(0) + " images");
+		for (int i = 0; i < ib.get(0); i++) {
+			long l = lb.get(i);
+			ImageView imageView = new ImageView(this.logicalDevice, l, VK_FORMAT_B8G8R8A8_UNORM);
+			System.out.println("Image: " + l);
+		}
+
 		memFree(ib);
 		memFree(lb);
 
 		if (err != VK_SUCCESS) {
 			throw new AssertionError("Error creating swapchain: " + Vulkan.translateVulkanResult(err));
 		}
+
+		System.out.println("Created swapchain: " + this.id);
 	}
 }

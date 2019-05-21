@@ -8,6 +8,7 @@ import static org.lwjgl.vulkan.KHRSurface.*;
 import static org.lwjgl.vulkan.KHRSwapchain.*;
 import static org.lwjgl.vulkan.VK10.*;
 
+import com.gracefulcode.opengine.PhysicalDevice;
 import com.gracefulcode.opengine.Window;
 
 import java.io.FileNotFoundException;
@@ -19,6 +20,7 @@ import java.nio.IntBuffer;
 import java.nio.LongBuffer;
 
 import java.util.ArrayList;
+import java.util.TreeSet;
 
 import org.lwjgl.PointerBuffer;
 
@@ -100,7 +102,7 @@ public class Vulkan {
 	protected IntBuffer ib = memAllocInt(1);
 
 	protected ArrayList<VulkanWindow> windows = new ArrayList<VulkanWindow>();
-	protected ArrayList<VkPhysicalDevice> physicalDevices = new ArrayList<VkPhysicalDevice>();
+	protected TreeSet<PhysicalDevice> physicalDevices;
 
 	public Vulkan() {
 		this(new Vulkan.Configuration());
@@ -108,6 +110,7 @@ public class Vulkan {
 
 	public Vulkan(Vulkan.Configuration configuration) {
 		this.configuration = configuration;
+		this.physicalDevices = new TreeSet<PhysicalDevice>(this.configuration.physicalDeviceSelector);
 
 		if (!glfwVulkanSupported()) {
 			throw new AssertionError("GLFW failed to find the Vulkan loader");
@@ -161,6 +164,10 @@ public class Vulkan {
 		// this.pickPhysicalDevice();
 	}
 
+	TreeSet<PhysicalDevice> getPhysicalDevices() {
+		return this.physicalDevices;
+	}
+
 	public VulkanWindow createWindow(Window window) {
 		VulkanWindow vw = new VulkanWindow(window, this);
 		this.windows.add(vw);
@@ -183,197 +190,10 @@ public class Vulkan {
 
 		for (int i = 0; i < this.ib.get(0); i++) {
 			long physicalDeviceId = pPhysicalDevices.get(i);
-			VkPhysicalDevice physicalDevice = new VkPhysicalDevice(physicalDeviceId, this.instance);
+			PhysicalDevice physicalDevice = new PhysicalDevice(new VkPhysicalDevice(physicalDeviceId, this.instance));
 			this.physicalDevices.add(physicalDevice);
 		}
 		memFree(pPhysicalDevices);
-	}
-
-	/**
-	 * TODO: Find some way to let the user choose which device based on these qualities. Right now
-	 * they cannot filter based on these.
-	 */
-	protected boolean deviceIsSuitableForSurface(VkPhysicalDevice physicalDevice, long surface) {
-		VkSurfaceCapabilitiesKHR capabilities = VkSurfaceCapabilitiesKHR.calloc();
-
-		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, capabilities);
-
-		System.out.println("Surface Capabilities:");
-		// On mac this seems to always be the full size of the screen. I would expect at least one of these
-		// extents to be the window size...
-		// vulkan-tutorial.com says that it should be the window size...
-		System.out.println("    Extent:");
-		System.out.println("        Current: " + capabilities.currentExtent().width() + "x" + capabilities.currentExtent().height());
-		System.out.println("        Max: " + capabilities.maxImageExtent().width() + "x" + capabilities.maxImageExtent().height());
-		System.out.println("        Min: " + capabilities.minImageExtent().width() + "x" + capabilities.minImageExtent().height());
-		// 1 is identity
-		System.out.println("    Current Transform: " + Integer.toBinaryString(capabilities.currentTransform()));
-		System.out.println("    Max Image Array Layers: " + capabilities.maxImageArrayLayers());
-		System.out.println("    Max Image Count: " + capabilities.maxImageCount());
-		System.out.println("    Min Image Count: " + capabilities.minImageCount());
-		// 0111: Mac
-		// 0001: Windows
-		// 1001: Other Windows
-		// 0001: ALPHA_OPAQUE_BIT
-		// 0010: PRE_MULTIPLIED_BIT
-		// 0100: POST_MULTIPLIED_BIT
-		// 1000: INHERIT_BIT
-		System.out.println("    Supported Composite Alpha: " + Integer.toBinaryString(capabilities.supportedCompositeAlpha()));
-		// 000000001: Mac
-		// 000000001: Windows
-		// 000000001: IDENTITY
-		// 000000010: ROTATE_90
-		// 000000100: ROTATE_180
-		// 000001000: ROTATE_270
-		// 000010000: HORIZONTAL_MIRROR
-		// 000100000: HORIZONTAL_MIRROR_ROTATE_90
-		// 001000000: HORIZONTAL_MIRROR_ROTATE_180
-		// 010000000: HORIZONTAL_MIRROR_ROTATE_270
-		// 100000000: INHERIT
-		System.out.println("    Supported Transforms: " + Integer.toBinaryString(capabilities.supportedTransforms()));
-		// 00011111: Mac
-		// 10011111: Windows
-		// 00011111: Other Windows
-		// 00000001: TRANSFER_SRC
-		// 00000010: TRANSFER_DST
-		// 00000100: SAMPLED
-		// 00001000: STORAGE
-		// 00010000: COLOR_ATTACHMENT
-		// 00100000: DEPTH_STENCIL_ATTACHMENT
-		// 01000000: TRANSIENT_ATTACHMENT
-		// 10000000: INPUT_ATTACHMENT
-		System.out.println("    Supported Usage Flags: " + Integer.toBinaryString(capabilities.supportedUsageFlags()));
-		capabilities.free();
-
-		IntBuffer ib = memAllocInt(1);
-		vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, ib, null);
-
-		if (ib.get(0) == 0) {
-			memFree(ib);
-			return false;
-		}
-
-		System.out.println("Formats:");
-
-		VkSurfaceFormatKHR.Buffer formats = VkSurfaceFormatKHR.calloc(ib.get(0));
-		vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, ib, formats);
-
-		for (int i = 0; i < formats.limit(); i++) {
-			formats.position(i);
-			// COLOR SPACE:
-			// 0: Mac
-			// 0: Windows
-			// Only defined value?!
-			// VK_COLOR_SPACE_SRGB_NONLINEAR_KHR
-
-			// FORMAT
-			// Mac is 44, 50, 97
-			// Windows is 2, 44, 50
-			// Windows other is 4, 44, 50, 37, 43
-			// VK_FORMAT_B8G8R8A8_UNORM <-- preferred
-			// VK_FORMAT_B8G8R8A8_SRGB
-			// VK_FORMAT_R16G16B16A16_SFLOAT
-			System.out.println("    Format: " + formats.format() + ", Color Space: " + formats.colorSpace());
-		}
-		formats.free();
-
-		ib.clear();
-		vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, ib, null);
-		System.out.println("Present modes:");
-		if (ib.get(0) == 0) {
-			memFree(ib);
-			return false;
-		}
-
-		IntBuffer ib2 = memAllocInt(ib.get(0));
-		vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, ib, ib2);
-		for (int i = 0; i < ib2.limit(); i++) {
-			// Mac has 2, 0
-			// Windows 1 has 2, 3, 1
-			// Windows 2 has 0, 2
-			// 0: PRESENT_MODE_IMMEDIATE_KHR <-- second if MAILBOX unavailable because FIFO can be buggy
-			// 1: PRESENT_MODE_MAILBOX_KHR <-- preferred
-			// 2: PRESENT_MODE_FIFO_KHR <-- guaranteed to exist, so third choice
-			// 3: PRESENT_MODE_FIFO_RELAXED_KHR
-			// Bad, might not even be in here
-			// PRESENT_MODE_SHARED_DEMAND_REFRESH_KHR
-			// PRESENT_MODE_SHARED_CONTINUOUS_REFRESH_KHR
-			System.out.println("    Mode: " + ib2.get(i));
-		}
-
-		return true;
-	}
-
-	public VkPhysicalDevice findPhysicalDeviceForSurface(long surface) {
-		VkPhysicalDevice currentBest = null;
-		VkPhysicalDeviceProperties currentBestProperties = null;
-
-		for (VkPhysicalDevice device: this.physicalDevices) {
-			VkPhysicalDeviceProperties pProperties = VkPhysicalDeviceProperties.calloc();
-			vkGetPhysicalDeviceProperties(device, pProperties);
-
-			System.out.println("----------");
-			System.out.println("DEVICE: " + pProperties.deviceNameString());
-			System.out.println("----------");
-
-			if (currentBest == null) {
-				if (this.deviceIsSuitableForSurface(device, surface)) {
-					currentBest = device;
-					currentBestProperties = pProperties;
-				}
-				continue;
-			}
-
-			if (this.deviceIsSuitableForSurface(device, surface)) {
-				if (this.configuration.physicalDeviceSelector.compare(pProperties, currentBestProperties) > 0) {
-					currentBestProperties.free();
-					currentBest = device;
-					currentBestProperties = pProperties;
-					continue;
-				}
-			}
-			pProperties.free();
-		}
-
-		if (currentBestProperties != null) {
-			currentBestProperties.free();
-		}
-
-		return currentBest;
-	}
-
-	/**
-	 * TODO: In a windowed context, we need one physical device PER window, potentially. Probably will wind up with the same, but can't be sure.
-	 * But we don't want to make compute contexts impossible, so who owns the physical device?
-	 */
-	protected void pickPhysicalDevice() {
-		VkPhysicalDevice currentBest = null;
-		VkPhysicalDeviceProperties currentBestProperties = null;
-
-		for (VkPhysicalDevice device: this.physicalDevices) {
-			VkPhysicalDeviceProperties pProperties = VkPhysicalDeviceProperties.calloc();
-			vkGetPhysicalDeviceProperties(device, pProperties);
-
-			if (currentBest == null) {
-				currentBest = device;
-				currentBestProperties = pProperties;
-				continue;
-			}
-
-			if (this.configuration.physicalDeviceSelector.compare(pProperties, currentBestProperties) > 0) {
-				currentBestProperties.free();
-
-				currentBest = device;
-				currentBestProperties = pProperties;
-			} else {
-				pProperties.free();
-			}
-		}
-		currentBestProperties.free();
-
-		// TODO: What if our score for current best is < 0? What if it's completely unsuitable.
-		// Note that since we set currentBest to the first initially, this can happen in theory.
-		this.selectedDevice = currentBest;
 	}
 
 	protected void createLogicalDevice() {
@@ -640,7 +460,6 @@ public class Vulkan {
 			buffer.position(m);
 			boolean didFind = false;
 			for (int i = 0; i < requiredExtensions.limit(); i++) {
-				// requiredExtensions.position(i);
 				for (int p = 0; p < this.configuration.desiredExtensions.length; p++) {
 					if (requiredExtensions.getStringASCII(i).equals(buffer.extensionNameString())) {
 						System.out.println("    +(" + m + "): " + buffer.extensionNameString());

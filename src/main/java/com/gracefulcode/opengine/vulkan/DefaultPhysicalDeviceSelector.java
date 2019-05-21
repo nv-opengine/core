@@ -1,6 +1,6 @@
 package com.gracefulcode.opengine.vulkan;
 
-import org.lwjgl.vulkan.VkPhysicalDeviceProperties;
+import com.gracefulcode.opengine.PhysicalDevice;
 
 /**
  * The deafult physical device selector should work well for graphics or
@@ -19,14 +19,14 @@ import org.lwjgl.vulkan.VkPhysicalDeviceProperties;
  * PhysicalDeviceSelector.
  */
 public class DefaultPhysicalDeviceSelector implements PhysicalDeviceSelector {
-	public int compare(VkPhysicalDeviceProperties a, VkPhysicalDeviceProperties b) {
+	public int compare(PhysicalDevice a, PhysicalDevice b) {
 		// Return the dedicated graphics card if one exists.
-		int comparison = Integer.compare(a.deviceType(), b.deviceType());
+		int comparison = Integer.compare(b.deviceType(), a.deviceType());
 		if (comparison != 0) return comparison;
 
 		// If one supports a higher level of API, it's probably a better card?
 		// Or at least the one with the most up to date graphics driver.
-		comparison = Integer.compare(a.apiVersion(), b.apiVersion());
+		comparison = Integer.compare(b.apiVersion(), a.apiVersion());
 		return comparison;
 	}
 }
