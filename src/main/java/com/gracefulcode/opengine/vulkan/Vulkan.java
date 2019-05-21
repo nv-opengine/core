@@ -75,7 +75,8 @@ public class Vulkan {
 		 * harder, though.
 		 */
 		public String[] desiredExtensions = {
-			VK_EXT_DEBUG_REPORT_EXTENSION_NAME
+			VK_EXT_DEBUG_REPORT_EXTENSION_NAME,
+			VK_KHR_SWAPCHAIN_EXTENSION_NAME
 		};
 	}
 
@@ -197,28 +198,29 @@ public class Vulkan {
 
 		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, capabilities);
 
+		System.out.println("Surface Capabilities:");
 		// On mac this seems to always be the full size of the screen. I would expect at least one of these
 		// extents to be the window size...
 		// vulkan-tutorial.com says that it should be the window size...
-		System.out.println("--------------------");
-		System.out.println("Surface Capabilities: Current Extent: Width: " + capabilities.currentExtent().width());
-		System.out.println("Surface Capabilities: Current Extent: Height: " + capabilities.currentExtent().height());
+		System.out.println("    Extent:");
+		System.out.println("        Current: " + capabilities.currentExtent().width() + "x" + capabilities.currentExtent().height());
+		System.out.println("        Max: " + capabilities.maxImageExtent().width() + "x" + capabilities.maxImageExtent().height());
+		System.out.println("        Min: " + capabilities.minImageExtent().width() + "x" + capabilities.minImageExtent().height());
 		// 1 is identity
-		System.out.println("Surface Capabilities: Current Transform: " + Integer.toBinaryString(capabilities.currentTransform()));
-		System.out.println("Surface Capabilities: Max Image Array Layers: " + capabilities.maxImageArrayLayers());
-		System.out.println("Surface Capabilities: Max Image Count: " + capabilities.maxImageCount());
-		System.out.println("Surface Capabilities: Max Image Extent: Width: " + capabilities.maxImageExtent().width());
-		System.out.println("Surface Capabilities: Max Image Extent: Height: " + capabilities.maxImageExtent().height());
-		System.out.println("Surface Capabilities: Min Image Count: " + capabilities.minImageCount());
-		System.out.println("Surface Capabilities: Min Image Extent: Width: " + capabilities.minImageExtent().width());
-		System.out.println("Surface Capabilities: Min Image Extent: Height: " + capabilities.minImageExtent().height());
+		System.out.println("    Current Transform: " + Integer.toBinaryString(capabilities.currentTransform()));
+		System.out.println("    Max Image Array Layers: " + capabilities.maxImageArrayLayers());
+		System.out.println("    Max Image Count: " + capabilities.maxImageCount());
+		System.out.println("    Min Image Count: " + capabilities.minImageCount());
 		// 0111: Mac
+		// 0001: Windows
+		// 1001: Other Windows
 		// 0001: ALPHA_OPAQUE_BIT
 		// 0010: PRE_MULTIPLIED_BIT
 		// 0100: POST_MULTIPLIED_BIT
 		// 1000: INHERIT_BIT
-		System.out.println("Surface Capabilities: Supported Composite Alpha: " + Integer.toBinaryString(capabilities.supportedCompositeAlpha()));
+		System.out.println("    Supported Composite Alpha: " + Integer.toBinaryString(capabilities.supportedCompositeAlpha()));
 		// 000000001: Mac
+		// 000000001: Windows
 		// 000000001: IDENTITY
 		// 000000010: ROTATE_90
 		// 000000100: ROTATE_180
@@ -228,8 +230,10 @@ public class Vulkan {
 		// 001000000: HORIZONTAL_MIRROR_ROTATE_180
 		// 010000000: HORIZONTAL_MIRROR_ROTATE_270
 		// 100000000: INHERIT
-		System.out.println("Surface Capabilities: Supported Transforms: " + Integer.toBinaryString(capabilities.supportedTransforms()));
+		System.out.println("    Supported Transforms: " + Integer.toBinaryString(capabilities.supportedTransforms()));
 		// 00011111: Mac
+		// 10011111: Windows
+		// 00011111: Other Windows
 		// 00000001: TRANSFER_SRC
 		// 00000010: TRANSFER_DST
 		// 00000100: SAMPLED
@@ -238,8 +242,7 @@ public class Vulkan {
 		// 00100000: DEPTH_STENCIL_ATTACHMENT
 		// 01000000: TRANSIENT_ATTACHMENT
 		// 10000000: INPUT_ATTACHMENT
-		System.out.println("Surface Capabilities: Supported Usage Flags: " + Integer.toBinaryString(capabilities.supportedUsageFlags()));
-		System.out.println("--------------------");
+		System.out.println("    Supported Usage Flags: " + Integer.toBinaryString(capabilities.supportedUsageFlags()));
 		capabilities.free();
 
 		IntBuffer ib = memAllocInt(1);
@@ -250,29 +253,33 @@ public class Vulkan {
 			return false;
 		}
 
-		System.out.println("Formats: " + ib.get(0));
+		System.out.println("Formats:");
 
 		VkSurfaceFormatKHR.Buffer formats = VkSurfaceFormatKHR.calloc(ib.get(0));
 		vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, ib, formats);
 
 		for (int i = 0; i < formats.limit(); i++) {
 			formats.position(i);
-			// Mac is 0
+			// COLOR SPACE:
+			// 0: Mac
+			// 0: Windows
 			// Only defined value?!
 			// VK_COLOR_SPACE_SRGB_NONLINEAR_KHR
-			System.out.println("Color Space: " + formats.colorSpace());
 
+			// FORMAT
 			// Mac is 44, 50, 97
+			// Windows is 2, 44, 50
+			// Windows other is 4, 44, 50, 37, 43
 			// VK_FORMAT_B8G8R8A8_UNORM <-- preferred
 			// VK_FORMAT_B8G8R8A8_SRGB
 			// VK_FORMAT_R16G16B16A16_SFLOAT
-			System.out.println("Format: " + formats.format());
+			System.out.println("    Format: " + formats.format() + ", Color Space: " + formats.colorSpace());
 		}
 		formats.free();
 
 		ib.clear();
 		vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, ib, null);
-		System.out.println("Present modes: " + ib.get(0));
+		System.out.println("Present modes:");
 		if (ib.get(0) == 0) {
 			memFree(ib);
 			return false;
@@ -282,11 +289,16 @@ public class Vulkan {
 		vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, ib, ib2);
 		for (int i = 0; i < ib2.limit(); i++) {
 			// Mac has 2, 0
+			// Windows 1 has 2, 3, 1
+			// Windows 2 has 0, 2
 			// 0: PRESENT_MODE_IMMEDIATE_KHR <-- second if MAILBOX unavailable because FIFO can be buggy
 			// 1: PRESENT_MODE_MAILBOX_KHR <-- preferred
 			// 2: PRESENT_MODE_FIFO_KHR <-- guaranteed to exist, so third choice
 			// 3: PRESENT_MODE_FIFO_RELAXED_KHR
-			System.out.println("Present mode: " + ib2.get(i));
+			// Bad, might not even be in here
+			// PRESENT_MODE_SHARED_DEMAND_REFRESH_KHR
+			// PRESENT_MODE_SHARED_CONTINUOUS_REFRESH_KHR
+			System.out.println("    Mode: " + ib2.get(i));
 		}
 
 		return true;
@@ -299,6 +311,10 @@ public class Vulkan {
 		for (VkPhysicalDevice device: this.physicalDevices) {
 			VkPhysicalDeviceProperties pProperties = VkPhysicalDeviceProperties.calloc();
 			vkGetPhysicalDeviceProperties(device, pProperties);
+
+			System.out.println("----------");
+			System.out.println("DEVICE: " + pProperties.deviceNameString());
+			System.out.println("----------");
 
 			if (currentBest == null) {
 				if (this.deviceIsSuitableForSurface(device, surface)) {
@@ -363,6 +379,7 @@ public class Vulkan {
 	protected void createLogicalDevice() {
 		vkGetPhysicalDeviceQueueFamilyProperties(this.selectedDevice, this.ib, null);
 		int queueCount = this.ib.get(0);
+
 		VkQueueFamilyProperties.Buffer queueProps = VkQueueFamilyProperties.calloc(queueCount);
 		vkGetPhysicalDeviceQueueFamilyProperties(this.selectedDevice, this.ib, queueProps);
 
@@ -574,16 +591,20 @@ public class Vulkan {
 		VkLayerProperties.Buffer buffer = VkLayerProperties.calloc(result);
 		vkEnumerateInstanceLayerProperties(this.ib, buffer);
 
+		System.out.println("----------");
+		System.out.println("LAYERS");
+		System.out.println("----------");		
+
 		int limit = buffer.limit();
 		for (int i = 0; i < this.configuration.desiredLayers.length; i++) {
 			for (int m = 0; m < limit; m++) {
 				buffer.position(m);
 				if (buffer.layerNameString().equals(this.configuration.desiredLayers[i])) {
-					System.out.println("Enabling Layer(" + m + "): " + buffer.layerNameString());
+					System.out.println("    +(" + m + "): " + buffer.layerNameString());
 					layers.put(memUTF8(this.configuration.desiredLayers[i]));
 					break;
 				} else {
-					System.out.println("NOT Enabling Layer(" + m + "): " + buffer.layerNameString());					
+					System.out.println("    -(" + m + "): " + buffer.layerNameString());					
 				}
 			}
 		}
@@ -593,18 +614,14 @@ public class Vulkan {
 	}
 
 	protected PointerBuffer getExtensions() {
+		System.out.println("----------");
+		System.out.println("EXTENSIONS");
+		System.out.println("----------");
+
 		PointerBuffer requiredExtensions = glfwGetRequiredInstanceExtensions();
 		if (requiredExtensions == null) {
 			throw new AssertionError("Failed to find list of required Vulkan extensions");
 		}
-
-		for (int i = 0; i < requiredExtensions.limit(); i++) {
-			requiredExtensions.position(i);
-			System.out.println(
-				requiredExtensions.getStringUTF8()
-			);
-		}
-		requiredExtensions.flip();
 
 		vkEnumerateInstanceExtensionProperties((ByteBuffer)null, this.ib, null);
 		int result = this.ib.get(0);
@@ -619,19 +636,34 @@ public class Vulkan {
 		PointerBuffer ppEnabledExtensionNames = memAllocPointer(requiredExtensions.remaining() + this.configuration.desiredExtensions.length);
 		ppEnabledExtensionNames.put(requiredExtensions);
 
-		for (int i = 0; i < this.configuration.desiredExtensions.length; i++) {
-			for (int m = 0; m < limit; m++) {
-				buffer.position(m);
-				if (buffer.extensionNameString().equals(this.configuration.desiredExtensions[i])) {
-					// Good!
-					System.out.println("Enabling Extension(" + m + "): " + buffer.extensionNameString());
-					ppEnabledExtensionNames.put(memUTF8(this.configuration.desiredExtensions[i]));
-					break;
-				} else {
-					System.out.println("NOT Enabling Extension(" + m + "): " + buffer.extensionNameString());
+		for (int m = 0; m < limit; m++) {
+			buffer.position(m);
+			boolean didFind = false;
+			for (int i = 0; i < requiredExtensions.limit(); i++) {
+				// requiredExtensions.position(i);
+				for (int p = 0; p < this.configuration.desiredExtensions.length; p++) {
+					if (requiredExtensions.getStringASCII(i).equals(buffer.extensionNameString())) {
+						System.out.println("    +(" + m + "): " + buffer.extensionNameString());
+						didFind = true;
+						break;
+					}
 				}
 			}
+			if (!didFind) {
+				for (int i = 0; i < this.configuration.desiredExtensions.length; i++) {
+					if (buffer.extensionNameString().equals(this.configuration.desiredExtensions[i])) {
+						System.out.println("    +(" + m + "): " + buffer.extensionNameString());
+						didFind = true;
+						ppEnabledExtensionNames.put(memUTF8(this.configuration.desiredExtensions[i]));
+						break;
+					}
+				}
+			}
+			if (!didFind) {
+				System.out.println("    -(" + m + "): " + buffer.extensionNameString());
+			}
 		}
+
 		ppEnabledExtensionNames.flip();
 		buffer.free();
 
