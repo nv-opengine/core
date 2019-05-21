@@ -61,8 +61,8 @@ public class VulkanWindow {
 	/**
 	 * The physical device backing this window.
 	 */
-	protected PhysicalDevice physicalDevice;
-	protected LogicalDevice logicalDevice;
+	protected VulkanPhysicalDevice physicalDevice;
+	protected VulkanLogicalDevice logicalDevice;
 
 	protected IntBuffer ib;
 
@@ -98,10 +98,10 @@ public class VulkanWindow {
 		memFree(lb);
 	}
 
-	protected PhysicalDevice findPhysicalDeviceForSurface() {
+	protected VulkanPhysicalDevice findPhysicalDeviceForSurface() {
 		System.out.println("Finding physical device for surface (window)");
 
-		for (PhysicalDevice device: this.vulkan.getPhysicalDevices()) {
+		for (VulkanPhysicalDevice device: this.vulkan.getPhysicalDevices()) {
 			if (this.deviceIsSuitableForSurface(device)) {
 				return device;
 			}

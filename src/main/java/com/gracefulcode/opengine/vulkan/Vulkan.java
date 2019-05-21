@@ -96,7 +96,7 @@ public class Vulkan {
 	protected IntBuffer ib = memAllocInt(1);
 
 	protected ArrayList<VulkanWindow> windows = new ArrayList<VulkanWindow>();
-	protected TreeSet<PhysicalDevice> physicalDevices;
+	protected TreeSet<VulkanPhysicalDevice> physicalDevices;
 
 	public Vulkan() {
 		this(new Vulkan.Configuration());
@@ -104,7 +104,7 @@ public class Vulkan {
 
 	public Vulkan(Vulkan.Configuration configuration) {
 		this.configuration = configuration;
-		this.physicalDevices = new TreeSet<PhysicalDevice>(this.configuration.physicalDeviceSelector);
+		this.physicalDevices = new TreeSet<VulkanPhysicalDevice>(this.configuration.physicalDeviceSelector);
 
 		if (!glfwVulkanSupported()) {
 			throw new AssertionError("GLFW failed to find the Vulkan loader");
@@ -155,7 +155,7 @@ public class Vulkan {
 		this.initPhysicalDevices();
 	}
 
-	TreeSet<PhysicalDevice> getPhysicalDevices() {
+	TreeSet<VulkanPhysicalDevice> getPhysicalDevices() {
 		return this.physicalDevices;
 	}
 
@@ -181,7 +181,7 @@ public class Vulkan {
 
 		for (int i = 0; i < this.ib.get(0); i++) {
 			long physicalDeviceId = pPhysicalDevices.get(i);
-			PhysicalDevice physicalDevice = new PhysicalDevice(new VkPhysicalDevice(physicalDeviceId, this.instance));
+			VulkanPhysicalDevice physicalDevice = new VulkanPhysicalDevice(new VkPhysicalDevice(physicalDeviceId, this.instance));
 			this.physicalDevices.add(physicalDevice);
 		}
 		memFree(pPhysicalDevices);

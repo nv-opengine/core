@@ -6,7 +6,6 @@ import static org.lwjgl.system.MemoryUtil.*;
 import static org.lwjgl.vulkan.VK10.*;
 
 import com.gracefulcode.opengine.ImageView;
-import com.gracefulcode.opengine.LogicalDevice;
 
 import java.nio.IntBuffer;
 import java.nio.LongBuffer;
@@ -16,10 +15,10 @@ import org.lwjgl.vulkan.VkSurfaceCapabilitiesKHR;
 import org.lwjgl.vulkan.VkSwapchainCreateInfoKHR;
 
 public class SwapChain {
-	protected LogicalDevice logicalDevice;
+	protected VulkanLogicalDevice logicalDevice;
 	protected long id;
 
-	public SwapChain(LogicalDevice logicalDevice, long surface) {
+	public SwapChain(VulkanLogicalDevice logicalDevice, long surface) {
 		this.logicalDevice = logicalDevice;
 
 		LongBuffer lb = memAllocLong(1);
@@ -72,7 +71,7 @@ public class SwapChain {
 		System.out.println("Got " + ib.get(0) + " images");
 		for (int i = 0; i < ib.get(0); i++) {
 			long l = lb.get(i);
-			ImageView imageView = new ImageView(this.logicalDevice, l, VK_FORMAT_B8G8R8A8_UNORM);
+			VulkanImageView imageView = new VulkanImageView(this.logicalDevice, l, VK_FORMAT_B8G8R8A8_UNORM);
 			System.out.println("Image: " + l);
 		}
 

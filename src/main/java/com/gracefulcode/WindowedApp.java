@@ -12,7 +12,7 @@ import org.lwjgl.glfw.GLFWKeyCallback;
 
 public class WindowedApp {
 	public static void main(String[] args) {
-		org.lwjgl.system.Configuration.DEBUG.set(true);
+		// org.lwjgl.system.Configuration.DEBUG.set(true);
 		
 		WindowManager.init();
 		WindowManager.Configuration wmConfiguration = new WindowManager.Configuration();
