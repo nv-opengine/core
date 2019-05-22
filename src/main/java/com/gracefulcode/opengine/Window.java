@@ -41,6 +41,10 @@ public class Window {
 		glfwShowWindow(this.id);
 	}
 
+	public ImageSet getImageSet() {
+		return null;
+	}
+
 	public long getId() {
 		return this.id;
 	}

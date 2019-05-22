@@ -57,6 +57,9 @@ public class VulkanPhysicalDevice implements PhysicalDevice<VulkanLogicalDevice>
 			this.capabilities = VkSurfaceCapabilitiesKHR.calloc();
 
 			this.ib = memAllocInt(1);
+
+			// Swapchain is being created before this?
+			System.out.println("DEVICE SURFACE");
 			vkGetPhysicalDeviceSurfaceFormatsKHR(this.device.device, this.surface, this.ib, null);
 
 			VkSurfaceFormatKHR.Buffer formats = VkSurfaceFormatKHR.calloc(this.ib.get(0));
@@ -108,6 +111,10 @@ public class VulkanPhysicalDevice implements PhysicalDevice<VulkanLogicalDevice>
 					// PRESENT_MODE_SHARED_CONTINUOUS_REFRESH_KHR
 				}
 			}
+		}
+
+		public long getSurface() {
+			return this.surface;
 		}
 
 		public String toString() {
@@ -168,6 +175,7 @@ public class VulkanPhysicalDevice implements PhysicalDevice<VulkanLogicalDevice>
 	}
 
 	public static class QueueFamilyProperties {
+		public int index;
 		public VkExtent3D minImageTransferGranularity;
 		public int queueCount;
 		public int queueFlags;
@@ -201,6 +209,7 @@ public class VulkanPhysicalDevice implements PhysicalDevice<VulkanLogicalDevice>
 			VkQueueFamilyProperties properties = queueProps.get(queueFamilyIndex);
 
 			QueueFamilyProperties qfp = new QueueFamilyProperties();
+			qfp.index = queueFamilyIndex;
 			qfp.minImageTransferGranularity = properties.minImageTransferGranularity();
 			qfp.queueCount = properties.queueCount();
 			qfp.queueFlags = properties.queueFlags();
@@ -213,6 +222,31 @@ public class VulkanPhysicalDevice implements PhysicalDevice<VulkanLogicalDevice>
 		}
 
 		queueProps.free();
+	}
+
+	public boolean canDisplayToSurface(long surface) {
+		for (QueueFamilyProperties qpf: this.queueFamilyProperties) {
+			vkGetPhysicalDeviceSurfaceSupportKHR(
+				this.device,
+				qpf.index,
+				surface,
+				this.ib
+			);
+			if (this.ib.get(0) == VK_TRUE) {
+				if (!this.surfaceProperties.containsKey(surface)) {
+					this.surfaceProperties.put(
+						surface,
+						new PhysicalDeviceSurface(this, surface)
+					);
+				}
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public PhysicalDeviceSurface getSurface(long surface) {
+		return this.surfaceProperties.get(surface);
 	}
 
 	public VkPhysicalDevice getDevice() {

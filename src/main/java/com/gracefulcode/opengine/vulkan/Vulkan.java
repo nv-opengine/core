@@ -60,7 +60,9 @@ public class Vulkan {
 		 * die if we don't have them. It does make debugging a lot harder, though.
 		 */
 		public String[] desiredLayers = {
-			"VK_LAYER_LUNARG_standard_validation"
+			"VK_LAYER_LUNARG_standard_validation",
+			"VK_LAYER_LUNARG_monitor",
+			// "VK_LAYER_LUNARG_api_dump"
 		};
 
 		/**
@@ -78,19 +80,10 @@ public class Vulkan {
 
 	protected Vulkan.Configuration configuration;
 	protected VkPhysicalDevice selectedDevice;
-	protected VkDevice logicalDevice;
 	protected MemoryManager memoryManager;
 	protected VkInstance instance;
 	protected CommandPool graphicsPool;
 	protected CommandPool computePool;
-
-	// TODO: This probably doesn't belong in Vulkan, but in some other object
-	// you can have more than one of.
-	protected long pipelineLayoutId;
-
-	// TODO: Do we wrap these?
-	protected int graphicsQueueIndex = -1;
-	protected int computeQueueIndex = -1;
 
 	// Reuse this int buffer for many method calls.
 	protected IntBuffer ib = memAllocInt(1);
@@ -116,13 +109,13 @@ public class Vulkan {
 		VkApplicationInfo appInfo = VkApplicationInfo.calloc()
 			.sType(VK_STRUCTURE_TYPE_APPLICATION_INFO)
 			.pApplicationName(memUTF8(this.configuration.applicationName))
-			.pEngineName(memUTF8("GOTBK"))
+			.pEngineName(memUTF8("Opengine v0.1"))
 			.apiVersion(VK_MAKE_VERSION(1, 0, 2));
 
 		VkInstanceCreateInfo pCreateInfo = VkInstanceCreateInfo.calloc()
-			.sType(VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO) // <- identifies what kind of struct this is (this is useful for extending the struct type later)
-			.pNext(NULL) // <- must always be NULL until any next Vulkan version tells otherwise
-			.pApplicationInfo(appInfo) // <- the application info we created above
+			.sType(VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO)
+			.pNext(NULL)
+			.pApplicationInfo(appInfo)
 			.ppEnabledExtensionNames(extensions)
 			.ppEnabledLayerNames(layers);
 
@@ -133,25 +126,18 @@ public class Vulkan {
 			}
 		}
 
-		PointerBuffer pInstance = memAllocPointer(1); // <- create a PointerBuffer which will hold the handle to the created VkInstance
-		int err = vkCreateInstance(pCreateInfo, null, pInstance); // <- actually create the VkInstance now!
-		long instance = pInstance.get(0); // <- get the VkInstance handle
-		memFree(pInstance); // <- free the PointerBuffer
+		PointerBuffer pInstance = memAllocPointer(1);
+		int err = vkCreateInstance(pCreateInfo, null, pInstance);
+		long instance = pInstance.get(0);
+		memFree(pInstance);
 
-
-		// One word about freeing memory:
-		// Every host-allocated memory directly or indirectly referenced via a parameter to any Vulkan function can always
-		// be freed right after the invocation of the Vulkan function returned.
-
-		// Check whether we succeeded in creating the VkInstance
 		if (err != VK_SUCCESS) {
 			throw new AssertionError("Failed to create VkInstance: " + Vulkan.translateVulkanResult(err));
 		}
 
-		// Create an object-oriented wrapper around the simple VkInstance long handle
-		// This is needed by LWJGL to later "dispatch" (i.e. direct calls to) the right Vukan functions.
 		this.instance = new VkInstance(instance, pCreateInfo);
 
+		// Initialize all physical devices so that we can choose from them.
 		this.initPhysicalDevices();
 	}
 
@@ -192,6 +178,7 @@ public class Vulkan {
 	 * our pipeline. In the case of a compute pipeline, this is basically the
 	 * set of inputs.
 	 */
+	/*
 	public Pipeline createComputePipeline(Shader shader, String entryMethod) {
 		VkPipelineShaderStageCreateInfo stageCreate = VkPipelineShaderStageCreateInfo.calloc();
 		stageCreate.sType(VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO);
@@ -216,6 +203,7 @@ public class Vulkan {
 
 		return null;
 	}
+	*/
 
 	private final VkDebugReportCallbackEXT dbgFunc = VkDebugReportCallbackEXT.create(
         (flags, objectType, object, location, messageCode, pLayerPrefix, pMessage, pUserData) -> {
@@ -273,18 +261,14 @@ public class Vulkan {
 		}
 	}
 
-	public Shader createComputeShader(String fileName) throws FileNotFoundException, IOException {
-		// Do we want to eventually have some sort of shader controller?
-		Shader shader = new Shader(this.logicalDevice, "comp.spv", VK_SHADER_STAGE_COMPUTE_BIT);
-		return shader;
-	}
+	// public Shader createComputeShader(String fileName) throws FileNotFoundException, IOException {
+	// 	// Do we want to eventually have some sort of shader controller?
+	// 	Shader shader = new Shader(this.logicalDevice, "comp.spv", VK_SHADER_STAGE_COMPUTE_BIT);
+	// 	return shader;
+	// }
 
 	public VkInstance getInstance() {
 		return this.instance;
-	}
-
-	public VkDevice getLogicalDevice() {
-		return this.logicalDevice;
 	}
 
 	public Image clearImage(Image inputImage) {
@@ -322,16 +306,19 @@ public class Vulkan {
 		System.out.println("----------");		
 
 		int limit = buffer.limit();
-		for (int i = 0; i < this.configuration.desiredLayers.length; i++) {
-			for (int m = 0; m < limit; m++) {
+		for (int m = 0; m < limit; m++) {
+			boolean found = false;
+			for (int i = 0; i < this.configuration.desiredLayers.length; i++) {
 				buffer.position(m);
 				if (buffer.layerNameString().equals(this.configuration.desiredLayers[i])) {
 					System.out.println("    +(" + m + "): " + buffer.layerNameString());
 					layers.put(memUTF8(this.configuration.desiredLayers[i]));
-					break;
-				} else {
-					System.out.println("    -(" + m + "): " + buffer.layerNameString());					
+					found = true;
+					break;					
 				}
+			}
+			if (!found) {
+				System.out.println("    -(" + m + "): " + buffer.layerNameString());					
 			}
 		}
 		layers.flip();

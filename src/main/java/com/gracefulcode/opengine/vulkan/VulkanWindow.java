@@ -68,12 +68,6 @@ public class VulkanWindow {
 
 	protected IntBuffer ib;
 
-	// TODO: Do we wrap these?
-	protected int graphicsQueueIndex = -1;
-	protected int computeQueueIndex = -1;
-
-	// protected VkSupportCapabilitiesKHR capabilities;
-
 	/**
 	 * This is the main thing that we're abstracting here. Each window has a
 	 * single RenderPass that we're setting up and then executing.
@@ -116,8 +110,9 @@ public class VulkanWindow {
 	 * TODO: Find some way to let the user choose which device based on these qualities. Right now
 	 * they cannot filter based on these.
 	 */
-	protected boolean deviceIsSuitableForSurface(PhysicalDevice physicalDevice) {
-		return true;
+	protected boolean deviceIsSuitableForSurface(VulkanPhysicalDevice physicalDevice) {
+		if (physicalDevice.canDisplayToSurface(this.surface)) return true;
+		return false;
 	}
 
 	protected void findPhysicalSurface() {
@@ -126,7 +121,7 @@ public class VulkanWindow {
 
 		// this.memoryManager = new MemoryManager(this.logicalDevice);
 
-		this.swapChain = new SwapChain(this.logicalDevice, this.surface);
+		this.swapChain = new SwapChain(this.logicalDevice, this.physicalDevice.getSurface(this.surface));
 		this.pipeline = new Pipeline(this.swapChain, this.logicalDevice);
 		this.renderPass = new RenderPass(this.swapChain, this.logicalDevice);
 	}

@@ -23,18 +23,18 @@ public class SwapChain {
 	protected ArrayList<VulkanImageView> imageViews = new ArrayList<VulkanImageView>();
 	protected VkSurfaceCapabilitiesKHR capabilities;
 
-	public SwapChain(VulkanLogicalDevice logicalDevice, long surface) {
+	public SwapChain(VulkanLogicalDevice logicalDevice, VulkanPhysicalDevice.PhysicalDeviceSurface physicalDeviceSurface) {
 		this.logicalDevice = logicalDevice;
 
 		LongBuffer lb = memAllocLong(1);
 		IntBuffer ib = memAllocInt(0);
 
 		this.capabilities = VkSurfaceCapabilitiesKHR.calloc();
-		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(this.logicalDevice.getPhysicalDevice().getDevice(), surface, this.capabilities);
+		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(this.logicalDevice.getPhysicalDevice().getDevice(), physicalDeviceSurface.getSurface(), this.capabilities);
 
 		VkSwapchainCreateInfoKHR createInfo = VkSwapchainCreateInfoKHR.calloc();
 		createInfo.sType(VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR);
-		createInfo.surface(surface);
+		createInfo.surface(physicalDeviceSurface.getSurface());
 		createInfo.minImageCount(this.capabilities.minImageCount());
 		createInfo.imageFormat(this.getImageFormat());
 		createInfo.imageColorSpace(VK_COLOR_SPACE_SRGB_NONLINEAR_KHR);
@@ -55,6 +55,7 @@ public class SwapChain {
 		createInfo.clipped(true);
 		createInfo.oldSwapchain(0);
 
+		System.out.println("CREATING SWAPCHAIN");
 		int err = vkCreateSwapchainKHR(
 			this.logicalDevice.getDevice(),
 			createInfo,

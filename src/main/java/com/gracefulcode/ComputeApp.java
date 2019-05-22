@@ -26,18 +26,18 @@ public class ComputeApp {
 		MemoryManager.Buffer bufferB = vulkan.createComputeBuffer("Compute: B", 1023);
 		vulkan.doneAllocating();
 		
-		Shader shader = vulkan.createComputeShader("comp.spv");
+		// Shader shader = vulkan.createComputeShader("comp.spv");
 
 		// TODO: I am going to want to swap these back and forth, using last
 		// "frame"'s data as the scratchpad for this "frame." The current
 		// createBinding setup makes that hard/impossible. Rethink?
 		// Create Binding is actually done in two steps. In the first one we're defining what KIND of binding it is.
 		// Binding to a specific buffer is done later. That's essentially what I want, I just need to expose that.
-		shader.createBinding(0, bufferA);
-		shader.createBinding(1, bufferB);
-		shader.doneBinding();
+		// shader.createBinding(0, bufferA);
+		// shader.createBinding(1, bufferB);
+		// shader.doneBinding();
 
-		Pipeline computePipeline = vulkan.createComputePipeline(shader, "main");
+		// Pipeline computePipeline = vulkan.createComputePipeline(shader, "main");
 
 		/**
 		 * This is what's left, in C++. We're very close. Gotta design how the API works:

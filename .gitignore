@@ -1,5 +1,6 @@
 # Ignore Gradle project-specific cache directory
 .gradle
+hs_err_*
 
 # Ignore Gradle build output directory
 build

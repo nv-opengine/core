@@ -1,5 +1,8 @@
 package com.gracefulcode.opengine.vulkan;
 
+import com.gracefulcode.opengine.ImageSet;
+import com.gracefulcode.opengine.Window;
+
 /**
  * There is a command buffer per rendering setup.
  * In the underlying implementation, there is one per rendering setup <b>per
@@ -13,7 +16,7 @@ public class CommandBuffer {
 	/**
 	 * Starts creating a (set of) command buffer(s) for the given window.
 	 */
-	public start(Window window) {
+	public void start(Window window) {
 		ImageSet imageSet = window.getImageSet();
 	}
 }
