@@ -4,19 +4,15 @@ import static org.lwjgl.glfw.GLFW.*;
 
 import com.gracefulcode.opengine.WindowManager;
 import com.gracefulcode.opengine.Window;
-import com.gracefulcode.opengine.vulkan.Image;
 import com.gracefulcode.opengine.vulkan.Vulkan;
-import com.gracefulcode.opengine.vulkan.VulkanWindow;
 
 import org.lwjgl.glfw.GLFWKeyCallback;
 
 public class WindowedApp {
 	public static void main(String[] args) {
-		// org.lwjgl.system.Configuration.DEBUG.set(true);
-		
 		WindowManager.init();
+
 		WindowManager.Configuration wmConfiguration = new WindowManager.Configuration();
-		wmConfiguration.defaultWindowConfiguration = new Window.Configuration();
 
 		// TODO: This should be made GLFW agnostic.
 		wmConfiguration.defaultWindowConfiguration.keyCallback = new GLFWKeyCallback() {
@@ -32,10 +28,9 @@ public class WindowedApp {
 		vulkanConfiguration.needCompute = false;
 
 		Vulkan vulkan = new Vulkan(vulkanConfiguration);
+		WindowManager windowManager = vulkan.getWindowManager(wmConfiguration);
 
-		WindowManager windowManager = new WindowManager(wmConfiguration);
-		// TODO: Do I want to simplify this?
-		VulkanWindow vulkanWindow = vulkan.createWindow(windowManager.createWindow());
+		Window vulkanWindow = windowManager.createWindow();
 
 		// Set up pipeline!
 		// Image frameImage = vulkanWindow.createFramebufferImage();

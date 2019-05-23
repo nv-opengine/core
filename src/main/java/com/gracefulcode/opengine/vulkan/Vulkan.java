@@ -10,6 +10,7 @@ import static org.lwjgl.vulkan.VK10.*;
 
 import com.gracefulcode.opengine.PhysicalDevice;
 import com.gracefulcode.opengine.Window;
+import com.gracefulcode.opengine.WindowManager;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -84,6 +85,7 @@ public class Vulkan {
 	protected VkInstance instance;
 	protected CommandPool graphicsPool;
 	protected CommandPool computePool;
+	protected WindowManager<VulkanWindow, VulkanWindowCreator> windowManager;
 
 	// Reuse this int buffer for many method calls.
 	protected IntBuffer ib = memAllocInt(1);
@@ -145,11 +147,23 @@ public class Vulkan {
 		return this.physicalDevices;
 	}
 
-	public VulkanWindow createWindow(Window window) {
-		VulkanWindow vw = new VulkanWindow(window, this);
-		this.windows.add(vw);
-		return vw;
+	public WindowManager<VulkanWindow, VulkanWindowCreator> getWindowManager() {
+		return this.getWindowManager(new WindowManager.Configuration());
 	}
+
+	public WindowManager<VulkanWindow, VulkanWindowCreator> getWindowManager(WindowManager.Configuration wmConfiguration) {
+		if (this.windowManager == null) {
+			this.windowManager = new WindowManager<VulkanWindow, VulkanWindowCreator>(wmConfiguration, new VulkanWindowCreator(this));
+		}
+
+		return this.windowManager;
+	}
+
+	// public VulkanWindow createWindow(Window window) {
+	// 	VulkanWindow vw = new VulkanWindow(window, this);
+	// 	this.windows.add(vw);
+	// 	return vw;
+	// }
 
 	protected void initPhysicalDevices() {
 		int err = vkEnumeratePhysicalDevices(this.instance, this.ib, null);

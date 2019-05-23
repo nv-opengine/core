@@ -40,8 +40,11 @@ dependencies {
     // This dependency is found on compile classpath of this component and consumers.
     implementation 'com.google.guava:guava:27.0.1-jre'
 
-    // Use JUnit test framework
+    // Unit testing
     testImplementation 'junit:junit:4.12'
+    testCompile 'org.mockito:mockito-core:2.+'
+
+    // LWJGL
     implementation "org.lwjgl:lwjgl:$lwjglVersion"
     implementation "org.lwjgl:lwjgl-assimp:$lwjglVersion"
     implementation "org.lwjgl:lwjgl-glfw:$lwjglVersion"
@@ -53,6 +56,8 @@ dependencies {
     runtimeOnly "org.lwjgl:lwjgl-glfw:$lwjglVersion:$lwjglNatives"
     runtimeOnly "org.lwjgl:lwjgl-openal:$lwjglVersion:$lwjglNatives"
     runtimeOnly "org.lwjgl:lwjgl-stb:$lwjglVersion:$lwjglNatives"
+
+    // Make the mac work
     if (lwjglNatives == "natives-macos") runtimeOnly "org.lwjgl:lwjgl-vulkan:$lwjglVersion:$lwjglNatives"
 }
 

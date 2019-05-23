@@ -1,5 +1,6 @@
 package com.gracefulcode.opengine.vulkan;
 
+import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.glfw.GLFWVulkan.*;
 import static org.lwjgl.system.MemoryUtil.*;
 import static org.lwjgl.vulkan.KHRSurface.*;
@@ -17,6 +18,7 @@ import org.lwjgl.vulkan.VkQueueFamilyProperties;
 import org.lwjgl.vulkan.VkSurfaceFormatKHR;
 // import org.lwjgl.vulkan.VkRenderPass;
 
+import com.gracefulcode.opengine.ImageSet;
 import com.gracefulcode.opengine.LogicalDevice;
 import com.gracefulcode.opengine.PhysicalDevice;
 import com.gracefulcode.opengine.Window;
@@ -33,11 +35,10 @@ import java.nio.LongBuffer;
  * @version 0.1
  * @since 0.1
  */
-public class VulkanWindow {
+public class VulkanWindow implements Window {
 	/**
-	 * The non-vulkan-specific Window.
 	 */
-	protected Window window;
+	protected long windowId;
 
 	/**
 	 * The instance of Vulkan that we're tied to.
@@ -74,24 +75,41 @@ public class VulkanWindow {
 	 */
 	// protected VkRenderPass renderPass;
 
-	VulkanWindow(Window window, Vulkan vulkan) {
-		this.window = window;
+	VulkanWindow(Vulkan vulkan, long windowId) {
 		this.vulkan = vulkan;
 		this.ib = memAllocInt(1);
+		this.windowId = windowId;
 
 		this.createSurface();
 		this.findPhysicalSurface();
+	}
+
+	public void close() {
+		glfwHideWindow(this.windowId);
+		glfwDestroyWindow(this.windowId);
 	}
 
 	protected void createSurface() {
 		LongBuffer lb = memAllocLong(1);
 		int err;
 
-		if ((err = glfwCreateWindowSurface(this.vulkan.getInstance(), this.window.getId(), null, lb)) != VK_SUCCESS) {
+		if ((err = glfwCreateWindowSurface(this.vulkan.getInstance(), this.windowId, null, lb)) != VK_SUCCESS) {
 			throw new AssertionError("Could not create surface: " + Vulkan.translateVulkanResult(err));
 		}
 		this.surface = lb.get(0);
 		memFree(lb);
+	}
+
+	public ImageSet getImageSet() {
+		return null;
+	}
+
+	public boolean shouldClose() {
+		return glfwWindowShouldClose(this.windowId);
+	}
+
+	public long getWindowId() {
+		return this.windowId;
 	}
 
 	protected VulkanPhysicalDevice findPhysicalDeviceForSurface() {
