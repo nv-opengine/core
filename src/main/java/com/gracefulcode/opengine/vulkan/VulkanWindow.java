@@ -139,7 +139,9 @@ public class VulkanWindow implements Window {
 
 		// this.memoryManager = new MemoryManager(this.logicalDevice);
 
-		this.swapChain = new SwapChain(this.logicalDevice, this.physicalDevice.getSurface(this.surface));
+		int presentMode = VK_PRESENT_MODE_MAILBOX_KHR;
+
+		this.swapChain = new SwapChain(this.logicalDevice, this.physicalDevice.getSurface(this.surface), presentMode);
 		this.pipeline = new Pipeline(this.swapChain, this.logicalDevice);
 		this.renderPass = new RenderPass(this.swapChain, this.logicalDevice);
 	}

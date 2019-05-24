@@ -21,6 +21,7 @@ public class WindowedApp {
 				if (key == GLFW_KEY_ESCAPE) glfwSetWindowShouldClose(window, true);
 			}
 		};
+		wmConfiguration.defaultWindowConfiguration.title = "GOTBK";
 
 		Vulkan.Configuration vulkanConfiguration = new Vulkan.Configuration();
 		vulkanConfiguration.applicationName = "GOTBK";

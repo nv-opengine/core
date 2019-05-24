@@ -11,20 +11,44 @@ import java.nio.IntBuffer;
 import java.nio.LongBuffer;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
+import org.lwjgl.PointerBuffer;
+import org.lwjgl.vulkan.VkCommandBufferAllocateInfo;
 import org.lwjgl.vulkan.VkDevice;
 import org.lwjgl.vulkan.VkExtent2D;
 import org.lwjgl.vulkan.VkSurfaceCapabilitiesKHR;
 import org.lwjgl.vulkan.VkSwapchainCreateInfoKHR;
 
 public class SwapChain {
-	protected VulkanLogicalDevice logicalDevice;
-	protected long id;
-	protected ArrayList<VulkanImageView> imageViews = new ArrayList<VulkanImageView>();
-	protected VkSurfaceCapabilitiesKHR capabilities;
+	/**
+	 * One of these per swapchain image, basically.
+	 */
+	public static class PresentationRequest {
+		VulkanImageView imageView;
+		long commandBuffer;
 
-	public SwapChain(VulkanLogicalDevice logicalDevice, VulkanPhysicalDevice.PhysicalDeviceSurface physicalDeviceSurface) {
+		public PresentationRequest(VulkanImageView imageView, long commandBuffer) {
+			this.imageView = imageView;
+			this.commandBuffer = commandBuffer;
+
+			System.out.println("PresentationRequest:" + this.imageView + ":" + this.commandBuffer);
+		}
+	}
+
+	protected long id;
+
+	protected VulkanLogicalDevice logicalDevice;
+	protected VkSurfaceCapabilitiesKHR capabilities;
+	protected HashMap<Long, PresentationRequest> presentationRequests = new HashMap<Long, PresentationRequest>();
+	protected CommandPool graphicsPool;
+	protected CommandPool computePool;
+
+	public SwapChain(VulkanLogicalDevice logicalDevice, VulkanPhysicalDevice.PhysicalDeviceSurface physicalDeviceSurface, int presentMode) {
 		this.logicalDevice = logicalDevice;
+
+		// TODO: 0 isn't guaranteed to have graphics!
+		this.graphicsPool = new CommandPool(this.logicalDevice, 0);
 
 		LongBuffer lb = memAllocLong(1);
 		IntBuffer ib = memAllocInt(0);
@@ -55,7 +79,6 @@ public class SwapChain {
 		createInfo.clipped(true);
 		createInfo.oldSwapchain(0);
 
-		System.out.println("CREATING SWAPCHAIN");
 		int err = vkCreateSwapchainKHR(
 			this.logicalDevice.getDevice(),
 			createInfo,
@@ -69,23 +92,37 @@ public class SwapChain {
 		memFree(ib);
 		memFree(lb);
 
+		if (err != VK_SUCCESS) {
+			throw new AssertionError("Error creating swapchain: " + Vulkan.translateVulkanResult(err));
+		}
+
 		ib = memAllocInt(1);
 		vkGetSwapchainImagesKHR(this.logicalDevice.getDevice(), this.id, ib, null);
 		lb = memAllocLong(ib.get(0));
 		vkGetSwapchainImagesKHR(this.logicalDevice.getDevice(), this.id, ib, lb);
+
+		VkCommandBufferAllocateInfo allocateInfo = VkCommandBufferAllocateInfo.calloc();
+		allocateInfo.sType(VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO);
+		allocateInfo.commandPool(this.graphicsPool.getId());
+		allocateInfo.level(VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+
+		PointerBuffer pb = memAllocPointer(ib.get(0));
+		err = vkAllocateCommandBuffers(this.logicalDevice.getDevice(), allocateInfo, pb);
 		
+		if (err != VK_SUCCESS) {
+			throw new AssertionError("Error creating command buffers: " + Vulkan.translateVulkanResult(err));
+		}
+
 		for (int i = 0; i < ib.get(0); i++) {
 			long l = lb.get(i);
 			VulkanImageView imageView = new VulkanImageView(this.logicalDevice, l, VK_FORMAT_B8G8R8A8_UNORM);
-			this.imageViews.add(imageView);
+
+			PresentationRequest pr = new PresentationRequest(imageView, pb.get(i));
+			this.presentationRequests.put(imageView.getId(), pr);
 		}
 
 		memFree(ib);
 		memFree(lb);
-
-		if (err != VK_SUCCESS) {
-			throw new AssertionError("Error creating swapchain: " + Vulkan.translateVulkanResult(err));
-		}
 
 		System.out.println("Created swapchain: " + this.id);
 	}

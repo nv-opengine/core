@@ -3,6 +3,10 @@ package com.gracefulcode.opengine;
 import org.lwjgl.glfw.GLFWKeyCallback;
 
 public interface Window {
+	public static enum BufferType {
+		SINGLE, DOUBLE, MAILBOX
+	};
+
 	public static class Configuration {
 		public String title = "";
 		public int width = 800;
@@ -13,6 +17,7 @@ public interface Window {
 		public int clearG = 0;
 		public int clearB = 0;
 		public int clearA = 255;
+		public Window.BufferType bufferType = Window.BufferType.MAILBOX;
 	}
 
 	public long getWindowId();

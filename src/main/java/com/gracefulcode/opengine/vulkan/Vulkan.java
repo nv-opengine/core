@@ -83,8 +83,6 @@ public class Vulkan {
 	protected VkPhysicalDevice selectedDevice;
 	protected MemoryManager memoryManager;
 	protected VkInstance instance;
-	protected CommandPool graphicsPool;
-	protected CommandPool computePool;
 	protected WindowManager<VulkanWindow, VulkanWindowCreator> windowManager;
 
 	// Reuse this int buffer for many method calls.
@@ -158,12 +156,6 @@ public class Vulkan {
 
 		return this.windowManager;
 	}
-
-	// public VulkanWindow createWindow(Window window) {
-	// 	VulkanWindow vw = new VulkanWindow(window, this);
-	// 	this.windows.add(vw);
-	// 	return vw;
-	// }
 
 	protected void initPhysicalDevices() {
 		int err = vkEnumeratePhysicalDevices(this.instance, this.ib, null);

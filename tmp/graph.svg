@@ -1,23 +1,23 @@
 <svg width="1542pt" height="541pt" viewBox="0.00 0.00 1542.00 541.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-<g id="graph1" class="graph" transform="scale(1 1) rotate(0) translate(4 537)">
-<title>g</title>
-<polygon fill="white" stroke="white" points="-4,5 -4,-537 1539,-537 1539,5 -4,5"></polygon>
-<!-- getFramebuffers -->
-<g id="node1" class="node"><title>getFramebuffers</title>
-<polygon fill="none" stroke="black" points="0.2345,-367 0.2345,-483 351.765,-483 351.765,-367 0.2345,-367"></polygon>
-<text text-anchor="middle" x="176" y="-466.4" font-family="Times,serif" font-size="14.00">Window.getFramebuffers</text>
-<polyline fill="none" stroke="black" points="0.2345,-458.2 351.765,-458.2 "></polyline>
-<text text-anchor="middle" x="176" y="-441.6" font-family="Times,serif" font-size="14.00">Gets framebuffers logically set up to display to this window</text>
-<text text-anchor="middle" x="176" y="-424.8" font-family="Times,serif" font-size="14.00">(same color depth, resolution, etc.)</text>
-<polyline fill="none" stroke="black" points="0.2345,-416.6 351.765,-416.6 "></polyline>
-<text text-anchor="middle" x="38.7878" y="-387.6" font-family="Times,serif" font-size="14.00">N</text>
-<polyline fill="none" stroke="black" points="77.3411,-367 77.3411,-416.6 "></polyline>
-<text text-anchor="middle" x="175.666" y="-400" font-family="Times,serif" font-size="14.00">ImageSet framebuffers</text>
-<polyline fill="none" stroke="black" points="77.3411,-391.8 273.991,-391.8 "></polyline>
-<text text-anchor="middle" x="175.666" y="-375.2" font-family="Times,serif" font-size="14.00">Main framebuffers</text>
-<polyline fill="none" stroke="black" points="273.991,-367 273.991,-416.6 "></polyline>
-<text text-anchor="middle" x="312.545" y="-387.6" font-family="Times,serif" font-size="14.00">O</text>
-</g>
+	<g id="graph1" class="graph" transform="scale(1 1) rotate(0) translate(4 537)">
+		<title>g</title>
+			<polygon fill="white" stroke="white" points="-4,5 -4,-537 1539,-537 1539,5 -4,5"></polygon>
+			<!-- getFramebuffers -->
+			<g id="node1" class="node"><title>getFramebuffers</title>
+				<polygon fill="none" stroke="black" points="0.2345,-367 0.2345,-483 351.765,-483 351.765,-367 0.2345,-367"></polygon>
+				<text text-anchor="middle" x="176" y="-466.4" font-family="Times,serif" font-size="14.00">Window.getFramebuffers</text>
+				<polyline fill="none" stroke="black" points="0.2345,-458.2 351.765,-458.2 "></polyline>
+				<text text-anchor="middle" x="176" y="-441.6" font-family="Times,serif" font-size="10.00">Gets framebuffers logically set up to display to this window</text>
+				<text text-anchor="middle" x="176" y="-424.8" font-family="Times,serif" font-size="10.00">(same color depth, resolution, etc.)</text>
+				<polyline fill="none" stroke="black" points="0.2345,-416.6 351.765,-416.6 "></polyline>
+				<text text-anchor="middle" x="38.7878" y="-387.6" font-family="Times,serif" font-size="14.00">N</text>
+				<polyline fill="none" stroke="black" points="77.3411,-367 77.3411,-416.6 "></polyline>
+				<text text-anchor="middle" x="175.666" y="-400" font-family="Times,serif" font-size="14.00">ImageSet framebuffers</text>
+				<polyline fill="none" stroke="black" points="77.3411,-391.8 273.991,-391.8 "></polyline>
+				<text text-anchor="middle" x="175.666" y="-375.2" font-family="Times,serif" font-size="14.00">Main framebuffers</text>
+				<polyline fill="none" stroke="black" points="273.991,-367 273.991,-416.6 "></polyline>
+				<text text-anchor="middle" x="312.545" y="-387.6" font-family="Times,serif" font-size="14.00">O</text>
+			</g>
 <!-- clear -->
 <g id="node2" class="node"><title>clear</title>
 <polygon fill="none" stroke="black" points="387.894,-367.4 387.894,-466.6 618.106,-466.6 618.106,-367.4 387.894,-367.4"></polygon>

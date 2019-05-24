@@ -42,4 +42,12 @@ public class VulkanImageView implements ImageView {
 		memFree(lb);
 		createInfo.free();
 	}
+
+	public long getId() {
+		return this.id;
+	}
+
+	public String toString() {
+		return "VulkanImageView:" + this.id;
+	}
 }

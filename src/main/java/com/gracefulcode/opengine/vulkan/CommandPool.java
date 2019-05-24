@@ -9,7 +9,6 @@ import java.nio.LongBuffer;
 import java.util.ArrayList;
 
 import org.lwjgl.PointerBuffer;
-import org.lwjgl.vulkan.VkCommandBufferAllocateInfo;
 import org.lwjgl.vulkan.VkCommandPoolCreateInfo;
 import org.lwjgl.vulkan.VkDevice;
 
@@ -25,10 +24,10 @@ import org.lwjgl.vulkan.VkDevice;
 @ThreadInfo( perThread = true )
 public class CommandPool {
 	protected long commandPool;
-	protected VkDevice logicalDevice;
-	protected ArrayList<Long> commandBuffers = new ArrayList<Long>();
+	protected VulkanLogicalDevice logicalDevice;
+	protected ArrayList<CommandBuffer> commandBuffers = new ArrayList<CommandBuffer>();
 
-	CommandPool(VkDevice logicalDevice, int queueIndex) {
+	CommandPool(VulkanLogicalDevice logicalDevice, int queueIndex) {
 		this.logicalDevice = logicalDevice;
 
 		LongBuffer pCmdPool = memAllocLong(1);
@@ -37,35 +36,26 @@ public class CommandPool {
 			.sType(VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO)
 			.queueFamilyIndex(queueIndex)
 			.flags(VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
-		int err = vkCreateCommandPool(this.logicalDevice, cmdPoolInfo, null, pCmdPool);
+		int err = vkCreateCommandPool(this.logicalDevice.getDevice(), cmdPoolInfo, null, pCmdPool);
 		this.commandPool = pCmdPool.get(0);
 		cmdPoolInfo.free();
 
 		memFree(pCmdPool);
-	}
-
-	/**
-	 * TODO: CommandBuffer should be a class.
-	 */
-	public long getCommandBuffer() {
-		PointerBuffer pCommandBuffer = memAllocPointer(1);
-
-		VkCommandBufferAllocateInfo cmdBufAllocateInfo = VkCommandBufferAllocateInfo.calloc()
-			.sType(VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO)
-			.commandPool(commandPool)
-			.level(VK_COMMAND_BUFFER_LEVEL_PRIMARY)
-			.commandBufferCount(1);
-		int err = vkAllocateCommandBuffers(this.logicalDevice, cmdBufAllocateInfo, pCommandBuffer);
 
 		if (err != VK_SUCCESS) {
-			throw new AssertionError("Failed to allocate command buffer: " + Vulkan.translateVulkanResult(err));
+			throw new AssertionError("Could not create command pool: " + Vulkan.translateVulkanResult(err));
 		}
 
-		cmdBufAllocateInfo.free();
-		long commandBuffer = pCommandBuffer.get(0);
-		this.commandBuffers.add(commandBuffer);
+		System.out.println("Created command pool: " + this.commandPool);
+	}
 
-		memFree(pCommandBuffer);
-		return commandBuffer;
+	public CommandBuffer getCommandBuffer() {
+		CommandBuffer cb = new CommandBuffer(this.logicalDevice, this.commandPool);
+		this.commandBuffers.add(cb);
+		return cb;
+	}
+
+	public long getId() {
+		return this.commandPool;
 	}
 }
