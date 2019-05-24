@@ -3,7 +3,7 @@ package com.gracefulcode.opengine.vulkan;
 import com.gracefulcode.opengine.PhysicalDevice;
 
 /**
- * The deafult physical device selector should work well for graphics or
+ * The default physical device selector should work well for graphics or
  * compute workloads. For that reason, we actually only key off of two things.
  *
  * First, we prefer dedicated graphics cards. For the vast majority of cases,
