@@ -102,6 +102,7 @@ public class SwapChain {
 		VkCommandBufferAllocateInfo allocateInfo = VkCommandBufferAllocateInfo.calloc();
 		allocateInfo.sType(VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO);
 		allocateInfo.commandPool(this.graphicsPool.getId());
+		allocateInfo.commandBufferCount(ib.get(0));
 		allocateInfo.level(VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
 		PointerBuffer pb = memAllocPointer(ib.get(0));
