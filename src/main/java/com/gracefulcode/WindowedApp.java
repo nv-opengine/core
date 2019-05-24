@@ -2,6 +2,7 @@ package com.gracefulcode;
 
 import static org.lwjgl.glfw.GLFW.*;
 
+import com.gracefulcode.opengine.ImageSet;
 import com.gracefulcode.opengine.WindowManager;
 import com.gracefulcode.opengine.Window;
 import com.gracefulcode.opengine.vulkan.Vulkan;
@@ -32,6 +33,9 @@ public class WindowedApp {
 		WindowManager windowManager = vulkan.getWindowManager(wmConfiguration);
 
 		Window vulkanWindow = windowManager.createWindow();
+
+		ImageSet startingImageSet = vulkanWindow.getFramebuffer();
+		System.out.println(startingImageSet);
 
 		// Set up pipeline!
 		// Image frameImage = vulkanWindow.createFramebufferImage();

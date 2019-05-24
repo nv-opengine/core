@@ -23,4 +23,7 @@ public interface Window {
 	public long getWindowId();
 	public boolean shouldClose();
 	public void close();
+	public ImageSet getFramebuffer();
+	public int getWidth();
+	public int getHeight();
 }

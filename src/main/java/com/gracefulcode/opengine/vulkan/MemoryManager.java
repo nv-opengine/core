@@ -187,11 +187,13 @@ public class MemoryManager {
 			this.requirements = VkMemoryRequirements.calloc();
 			vkGetBufferMemoryRequirements(this.logicalDevice, this.id, this.requirements);
 
+			/*
 			System.out.println("Alignment: " + this.requirements.alignment());
 			System.out.println("Memory Type: " + Integer.toBinaryString(this.requirements.memoryTypeBits()));
 			System.out.println("Asked Size: " + bytes);
 			System.out.println("Size: " + this.requirements.size());
 			System.out.println("Effective Size: " + this.getEffectiveSize());
+			*/
 		}
 
 		public int getDescriptorType() {
@@ -279,7 +281,7 @@ public class MemoryManager {
 				memoryTypes.position(i);
 				if (buffer.isOptimal(i, memoryTypes.propertyFlags())) {
 					// Pick this one!
-					System.out.println("Picking memory id " + i + " (optimal)");
+					// System.out.println("Picking memory id " + i + " (optimal)");
 
 					ArrayList<Buffer> ab = memoryTypeToBuffer.get(i);
 					if (ab == null) {
@@ -300,7 +302,7 @@ public class MemoryManager {
 				memoryTypes.position(i);
 				if (buffer.isAcceptable(i, memoryTypes.propertyFlags())) {
 					// Pick this one!
-					System.out.println("Picking memory id " + i + " (acceptable)");
+					// System.out.println("Picking memory id " + i + " (acceptable)");
 
 					ArrayList<Buffer> ab = memoryTypeToBuffer.get(i);
 					if (ab == null) {
@@ -335,7 +337,7 @@ public class MemoryManager {
 			for (Buffer b: buffers) {
 				totalBytes += b.getEffectiveSize();
 			}
-			System.out.println("Determining memory for buffer type " + i + ": " + totalBytes);
+			// System.out.println("Determining memory for buffer type " + i + ": " + totalBytes);
 
 			VkMemoryAllocateInfo allocateInfo = VkMemoryAllocateInfo.calloc();
 			allocateInfo.sType(VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO);

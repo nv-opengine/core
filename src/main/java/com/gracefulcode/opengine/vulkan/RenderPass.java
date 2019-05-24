@@ -45,7 +45,5 @@ public class RenderPass {
 		if (err != VK_SUCCESS) {
 			throw new AssertionError("Error creating render pass: " + Vulkan.translateVulkanResult(err));
 		}
-
-		System.out.println("Created render pass: " + lb.get(0));
 	}
 }

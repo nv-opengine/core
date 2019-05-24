@@ -307,9 +307,9 @@ public class Vulkan {
 		VkLayerProperties.Buffer buffer = VkLayerProperties.calloc(result);
 		vkEnumerateInstanceLayerProperties(this.ib, buffer);
 
-		System.out.println("----------");
-		System.out.println("LAYERS");
-		System.out.println("----------");		
+		// System.out.println("----------");
+		// System.out.println("LAYERS");
+		// System.out.println("----------");		
 
 		int limit = buffer.limit();
 		for (int m = 0; m < limit; m++) {
@@ -317,15 +317,15 @@ public class Vulkan {
 			for (int i = 0; i < this.configuration.desiredLayers.length; i++) {
 				buffer.position(m);
 				if (buffer.layerNameString().equals(this.configuration.desiredLayers[i])) {
-					System.out.println("    +(" + m + "): " + buffer.layerNameString());
+					// System.out.println("    +(" + m + "): " + buffer.layerNameString());
 					layers.put(memUTF8(this.configuration.desiredLayers[i]));
 					found = true;
 					break;					
 				}
 			}
-			if (!found) {
-				System.out.println("    -(" + m + "): " + buffer.layerNameString());					
-			}
+			// if (!found) {
+			// 	System.out.println("    -(" + m + "): " + buffer.layerNameString());					
+			// }
 		}
 		layers.flip();
 
@@ -333,9 +333,9 @@ public class Vulkan {
 	}
 
 	protected PointerBuffer getExtensions() {
-		System.out.println("----------");
-		System.out.println("EXTENSIONS");
-		System.out.println("----------");
+		// System.out.println("----------");
+		// System.out.println("EXTENSIONS");
+		// System.out.println("----------");
 
 		PointerBuffer requiredExtensions = glfwGetRequiredInstanceExtensions();
 		if (requiredExtensions == null) {
@@ -361,7 +361,7 @@ public class Vulkan {
 			for (int i = 0; i < requiredExtensions.limit(); i++) {
 				for (int p = 0; p < this.configuration.desiredExtensions.length; p++) {
 					if (requiredExtensions.getStringASCII(i).equals(buffer.extensionNameString())) {
-						System.out.println("    +(" + m + "): " + buffer.extensionNameString());
+						// System.out.println("    +(" + m + "): " + buffer.extensionNameString());
 						didFind = true;
 						break;
 					}
@@ -370,16 +370,16 @@ public class Vulkan {
 			if (!didFind) {
 				for (int i = 0; i < this.configuration.desiredExtensions.length; i++) {
 					if (buffer.extensionNameString().equals(this.configuration.desiredExtensions[i])) {
-						System.out.println("    +(" + m + "): " + buffer.extensionNameString());
+						// System.out.println("    +(" + m + "): " + buffer.extensionNameString());
 						didFind = true;
 						ppEnabledExtensionNames.put(memUTF8(this.configuration.desiredExtensions[i]));
 						break;
 					}
 				}
 			}
-			if (!didFind) {
-				System.out.println("    -(" + m + "): " + buffer.extensionNameString());
-			}
+			// if (!didFind) {
+			// 	System.out.println("    -(" + m + "): " + buffer.extensionNameString());
+			// }
 		}
 
 		ppEnabledExtensionNames.flip();

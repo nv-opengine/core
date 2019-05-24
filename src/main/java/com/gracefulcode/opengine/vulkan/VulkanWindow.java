@@ -66,6 +66,7 @@ public class VulkanWindow implements Window {
 	 */
 	protected VulkanPhysicalDevice physicalDevice;
 	protected VulkanLogicalDevice logicalDevice;
+	protected VulkanWindowImageSet imageSet;
 
 	protected IntBuffer ib;
 
@@ -84,9 +85,32 @@ public class VulkanWindow implements Window {
 		this.findPhysicalSurface();
 	}
 
+	/**
+	 * TODO: Horrible performance, but wait until we are handling resizes in a callback to fix.
+	 */
+	public int getWidth() {
+		glfwGetWindowSize(this.windowId, this.ib, null);
+		return this.ib.get(0);
+	}
+
+	/**
+	 * TODO: Horrible performance, but wait until we are handling resizes in a callback to fix.
+	 */
+	public int getHeight() {
+		glfwGetWindowSize(this.windowId, null, this.ib);
+		return this.ib.get(0);
+	}
+
 	public void close() {
 		glfwHideWindow(this.windowId);
 		glfwDestroyWindow(this.windowId);
+	}
+
+	/**
+	 * Gets the ImageSet that represents our current framebuffer image.
+	 */
+	public ImageSet getFramebuffer() {
+		return this.imageSet;
 	}
 
 	protected void createSurface() {
@@ -112,9 +136,11 @@ public class VulkanWindow implements Window {
 		return this.windowId;
 	}
 
-	protected VulkanPhysicalDevice findPhysicalDeviceForSurface() {
-		System.out.println("Finding physical device for surface (window)");
+	public String toString() {
+		return "VulkanWindow:[id:" + this.windowId + ",width:" + this.getWidth() + ",height:" + this.getHeight() + "]";
+	}
 
+	protected VulkanPhysicalDevice findPhysicalDeviceForSurface() {
 		for (VulkanPhysicalDevice device: this.vulkan.getPhysicalDevices()) {
 			if (this.deviceIsSuitableForSurface(device)) {
 				return device;
@@ -144,5 +170,6 @@ public class VulkanWindow implements Window {
 		this.swapChain = new SwapChain(this.logicalDevice, this.physicalDevice.getSurface(this.surface), presentMode);
 		this.pipeline = new Pipeline(this.swapChain, this.logicalDevice);
 		this.renderPass = new RenderPass(this.swapChain, this.logicalDevice);
+		this.imageSet = new VulkanWindowImageSet(this, this.swapChain.getSize());
 	}
 }

@@ -37,8 +37,6 @@ public class VulkanImageView implements ImageView {
 		int err = vkCreateImageView(this.logicalDevice.getDevice(), createInfo, null, lb);
 		this.id = lb.get(0);
 
-		System.out.println("ImageView: " + this.id);
-
 		memFree(lb);
 		createInfo.free();
 	}

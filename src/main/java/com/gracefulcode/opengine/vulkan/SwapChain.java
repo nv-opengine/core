@@ -31,8 +31,6 @@ public class SwapChain {
 		public PresentationRequest(VulkanImageView imageView, long commandBuffer) {
 			this.imageView = imageView;
 			this.commandBuffer = commandBuffer;
-
-			System.out.println("PresentationRequest:" + this.imageView + ":" + this.commandBuffer);
 		}
 	}
 
@@ -123,8 +121,10 @@ public class SwapChain {
 
 		memFree(ib);
 		memFree(lb);
+	}
 
-		System.out.println("Created swapchain: " + this.id);
+	public int getSize() {
+		return this.presentationRequests.size();
 	}
 
 	public int getImageFormat() {

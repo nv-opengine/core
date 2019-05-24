@@ -59,7 +59,6 @@ public class VulkanPhysicalDevice implements PhysicalDevice<VulkanLogicalDevice>
 			this.ib = memAllocInt(1);
 
 			// Swapchain is being created before this?
-			System.out.println("DEVICE SURFACE");
 			vkGetPhysicalDeviceSurfaceFormatsKHR(this.device.device, this.surface, this.ib, null);
 
 			VkSurfaceFormatKHR.Buffer formats = VkSurfaceFormatKHR.calloc(this.ib.get(0));
@@ -86,7 +85,7 @@ public class VulkanPhysicalDevice implements PhysicalDevice<VulkanLogicalDevice>
 				// VK_FORMAT_B8G8R8A8_UNORM <-- preferred
 				// VK_FORMAT_B8G8R8A8_SRGB
 				// VK_FORMAT_R16G16B16A16_SFLOAT
-				System.out.println("    Format: " + formats.format() + ", Color Space: " + formats.colorSpace());
+				// System.out.println("    Format: " + formats.format() + ", Color Space: " + formats.colorSpace());
 			}
 			formats.free();
 

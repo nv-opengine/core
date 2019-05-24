@@ -67,7 +67,6 @@ public class DescriptorPool {
 		if (err != VK_SUCCESS) {
 			throw new AssertionError("Failed to create descriptor set.");
 		}
-		System.out.println("Set is " + lb2.get(0));
 
 		/**
 		 * VkDescriptorBufferInfo (?) merely says what the buffer *looks like*.

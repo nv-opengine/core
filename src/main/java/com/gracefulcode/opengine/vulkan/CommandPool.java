@@ -45,8 +45,6 @@ public class CommandPool {
 		if (err != VK_SUCCESS) {
 			throw new AssertionError("Could not create command pool: " + Vulkan.translateVulkanResult(err));
 		}
-
-		System.out.println("Created command pool: " + this.commandPool);
 	}
 
 	public CommandBuffer getCommandBuffer() {
