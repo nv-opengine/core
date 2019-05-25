@@ -15,8 +15,7 @@ import org.lwjgl.vulkan.VkDeviceQueueCreateInfo;
 import org.lwjgl.vulkan.VkPhysicalDevice;
 import org.lwjgl.vulkan.VkPhysicalDeviceProperties;
 import org.lwjgl.vulkan.VkQueueFamilyProperties;
-import org.lwjgl.vulkan.VkSurfaceFormatKHR;
-// import org.lwjgl.vulkan.VkRenderPass;
+import org.lwjgl.vulkan.VkSurfaceCapabilitiesKHR;
 
 import com.gracefulcode.opengine.ImageSet;
 import com.gracefulcode.opengine.LogicalDevice;
@@ -26,6 +25,8 @@ import com.gracefulcode.opengine.Window;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.nio.LongBuffer;
+
+import java.util.HashMap;
 
 /**
  * A VulkanWindow wraps the (more generic) Window class and adds some
@@ -50,12 +51,16 @@ public class VulkanWindow implements Window {
 	 */
 	protected long surface;
 
+	protected HashMap<ImageSet, SwapChain> swapChains = new HashMap<ImageSet, SwapChain>();
+	protected SwapChain activeSwapChain;
+
 	/**
 	 * We have one swapchain per window.
 	 */
-	protected SwapChain swapChain;
-	protected Pipeline pipeline;
-	protected RenderPass renderPass;
+	// protected SwapChain swapChain;
+	// protected Pipeline pipeline;
+	// protected RenderPass renderPass;
+	protected VkSurfaceCapabilitiesKHR capabilities;
 
 	protected String[] requiredExtensions = {
 		VK_KHR_SWAPCHAIN_EXTENSION_NAME
@@ -66,7 +71,6 @@ public class VulkanWindow implements Window {
 	 */
 	protected VulkanPhysicalDevice physicalDevice;
 	protected VulkanLogicalDevice logicalDevice;
-	protected VulkanWindowImageSet imageSet;
 
 	protected IntBuffer ib;
 
@@ -82,35 +86,41 @@ public class VulkanWindow implements Window {
 		this.windowId = windowId;
 
 		this.createSurface();
+
 		this.findPhysicalSurface();
-	}
-
-	/**
-	 * TODO: Horrible performance, but wait until we are handling resizes in a callback to fix.
-	 */
-	public int getWidth() {
-		glfwGetWindowSize(this.windowId, this.ib, null);
-		return this.ib.get(0);
-	}
-
-	/**
-	 * TODO: Horrible performance, but wait until we are handling resizes in a callback to fix.
-	 */
-	public int getHeight() {
-		glfwGetWindowSize(this.windowId, null, this.ib);
-		return this.ib.get(0);
-	}
-
-	public void close() {
-		glfwHideWindow(this.windowId);
-		glfwDestroyWindow(this.windowId);
 	}
 
 	/**
 	 * Gets the ImageSet that represents our current framebuffer image.
 	 */
 	public ImageSet getFramebuffer() {
-		return this.imageSet;
+		return new VulkanWindowImageSet(this, this.capabilities.minImageCount());
+	}
+
+	public void setDisplay(ImageSet imageSet) {
+		if (this.swapChains.containsKey(imageSet)) {
+			this.activeSwapChain = this.swapChains.get(imageSet);
+		}
+
+		int presentMode = VK_PRESENT_MODE_MAILBOX_KHR;
+
+		this.activeSwapChain = new SwapChain(this.logicalDevice, this.capabilities, this.physicalDevice.getSurface(this.surface), presentMode);
+		this.swapChains.put(imageSet, this.activeSwapChain);
+
+		System.out.println("Active swap chain: " + this.activeSwapChain);
+	}
+
+	public void dispose() {
+		for (SwapChain sc: this.swapChains.values()) {
+			sc.dispose();
+		}
+		vkDestroySurfaceKHR(this.vulkan.getInstance(), this.surface, null);;
+	}
+
+	public void close() {
+		glfwHideWindow(this.windowId);
+		glfwDestroyWindow(this.windowId);
+		this.dispose();
 	}
 
 	protected void createSurface() {
@@ -137,7 +147,7 @@ public class VulkanWindow implements Window {
 	}
 
 	public String toString() {
-		return "VulkanWindow:[id:" + this.windowId + ",width:" + this.getWidth() + ",height:" + this.getHeight() + "]";
+		return "VulkanWindow:[id:" + this.windowId + "]";
 	}
 
 	protected VulkanPhysicalDevice findPhysicalDeviceForSurface() {
@@ -163,13 +173,11 @@ public class VulkanWindow implements Window {
 		this.physicalDevice = this.findPhysicalDeviceForSurface();
 		this.logicalDevice = this.physicalDevice.createLogicalDevice(this.requiredExtensions, true, false);
 
-		// this.memoryManager = new MemoryManager(this.logicalDevice);
-
-		int presentMode = VK_PRESENT_MODE_MAILBOX_KHR;
-
-		this.swapChain = new SwapChain(this.logicalDevice, this.physicalDevice.getSurface(this.surface), presentMode);
-		this.pipeline = new Pipeline(this.swapChain, this.logicalDevice);
-		this.renderPass = new RenderPass(this.swapChain, this.logicalDevice);
-		this.imageSet = new VulkanWindowImageSet(this, this.swapChain.getSize());
+		this.capabilities = VkSurfaceCapabilitiesKHR.calloc();
+		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
+			this.logicalDevice.getPhysicalDevice().getDevice(),
+			this.surface,
+			this.capabilities
+		);
 	}
 }

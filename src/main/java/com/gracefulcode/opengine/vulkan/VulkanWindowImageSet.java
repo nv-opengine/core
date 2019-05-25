@@ -3,8 +3,8 @@ package com.gracefulcode.opengine.vulkan;
 import com.gracefulcode.opengine.ImageSet;
 
 public class VulkanWindowImageSet implements ImageSet {
-	protected VulkanWindow vulkanWindow;
 	protected int count;
+	protected VulkanWindow vulkanWindow;
 
 	public VulkanWindowImageSet(VulkanWindow vulkanWindow, int count) {
 		this.vulkanWindow = vulkanWindow;
@@ -18,14 +18,12 @@ public class VulkanWindowImageSet implements ImageSet {
 		return true;
 	}
 
-	// TODO: Fix this!
 	public int getHeight() {
-		return this.vulkanWindow.getHeight();
+		return 0;
 	}
 
-	// TODO: Fix this!
 	public int getWidth() {
-		return this.vulkanWindow.getWidth();
+		return 0;
 	}
 
 	public boolean knownResolution() {

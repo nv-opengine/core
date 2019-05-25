@@ -5,6 +5,7 @@ import static org.lwjgl.vulkan.KHRSwapchain.*;
 import static org.lwjgl.system.MemoryUtil.*;
 import static org.lwjgl.vulkan.VK10.*;
 
+import com.gracefulcode.opengine.ImageSet;
 import com.gracefulcode.opengine.ImageView;
 
 import java.nio.IntBuffer;
@@ -15,8 +16,11 @@ import java.util.HashMap;
 
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.vulkan.VkCommandBufferAllocateInfo;
+import org.lwjgl.vulkan.VkCommandBufferBeginInfo;
 import org.lwjgl.vulkan.VkDevice;
 import org.lwjgl.vulkan.VkExtent2D;
+import org.lwjgl.vulkan.VkRect2D;
+import org.lwjgl.vulkan.VkRenderPassBeginInfo;
 import org.lwjgl.vulkan.VkSurfaceCapabilitiesKHR;
 import org.lwjgl.vulkan.VkSwapchainCreateInfoKHR;
 
@@ -32,27 +36,34 @@ public class SwapChain {
 			this.imageView = imageView;
 			this.commandBuffer = commandBuffer;
 		}
+
+		public long getCommandBuffer() {
+			return this.commandBuffer;
+		}
 	}
 
 	protected long id;
+	// protected VkSurfaceFormatKHR surfaceFormat;
 
 	protected VulkanLogicalDevice logicalDevice;
 	protected VkSurfaceCapabilitiesKHR capabilities;
 	protected HashMap<Long, PresentationRequest> presentationRequests = new HashMap<Long, PresentationRequest>();
 	protected CommandPool graphicsPool;
 	protected CommandPool computePool;
+	protected Pipeline pipeline;
+	protected RenderPass renderPass;
+	protected ImageSet imageSet;
+	// protected VulkanWindowImageSet imageSet;
 
-	public SwapChain(VulkanLogicalDevice logicalDevice, VulkanPhysicalDevice.PhysicalDeviceSurface physicalDeviceSurface, int presentMode) {
+	public SwapChain(VulkanLogicalDevice logicalDevice, VkSurfaceCapabilitiesKHR capabilities, PhysicalDeviceSurface physicalDeviceSurface, int presentMode) {
 		this.logicalDevice = logicalDevice;
+		this.capabilities = capabilities;
 
 		// TODO: 0 isn't guaranteed to have graphics!
 		this.graphicsPool = new CommandPool(this.logicalDevice, 0);
 
 		LongBuffer lb = memAllocLong(1);
 		IntBuffer ib = memAllocInt(0);
-
-		this.capabilities = VkSurfaceCapabilitiesKHR.calloc();
-		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(this.logicalDevice.getPhysicalDevice().getDevice(), physicalDeviceSurface.getSurface(), this.capabilities);
 
 		VkSwapchainCreateInfoKHR createInfo = VkSwapchainCreateInfoKHR.calloc();
 		createInfo.sType(VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR);
@@ -122,6 +133,52 @@ public class SwapChain {
 
 		memFree(ib);
 		memFree(lb);
+
+		this.pipeline = new Pipeline(this, this.logicalDevice);
+		this.renderPass = new RenderPass(this, this.logicalDevice);
+	}
+
+	/**
+	 * TODO: Fix.
+	 */
+	public int getWidth() {
+		return 0;
+	}
+
+	/**
+	 * TODO: Fix.
+	 */
+	public int getHeight() {
+		return 0;
+	}
+
+	public void populateSwapChain(ImageSet imageSet) {
+		if (this.imageSet != null) throw new AssertionError("Cannot set imageSet for a SwapChain that already has one.");
+
+		this.imageSet = imageSet;
+
+		VkCommandBufferBeginInfo cmdBufInfo = VkCommandBufferBeginInfo.calloc();
+		cmdBufInfo.sType(VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO);
+		cmdBufInfo.pNext(NULL);
+
+		VkRenderPassBeginInfo renderPassBeginInfo = VkRenderPassBeginInfo.calloc();
+		renderPassBeginInfo.sType(VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO);
+		renderPassBeginInfo.pNext(NULL);
+		renderPassBeginInfo.renderPass();
+		renderPassBeginInfo.pClearValues();
+
+		VkRect2D renderArea = renderPassBeginInfo.renderArea();
+		renderArea.offset().x(0).y(0);
+		renderArea.extent(this.capabilities.currentExtent());
+
+		for (PresentationRequest pr: this.presentationRequests.values()) {
+			// renderPassBeginInfo.framebuffer(pr.framebuffer);
+
+			// int err = vkBeginCommandBuffer(pr.commandBuffer, cmdBufInfo);
+			// if (err != VK_SUCCESS) {
+			// 	throw new AssertionError("Could not create command buffer: " + Vulkan.translateVulkanResult(err));
+			// }
+		}
 	}
 
 	public int getSize() {
@@ -138,5 +195,6 @@ public class SwapChain {
 
 	public void dispose() {
 		this.capabilities.free();
+		vkDestroySwapchainKHR(this.logicalDevice.getDevice(), this.id, null);
 	}
 }

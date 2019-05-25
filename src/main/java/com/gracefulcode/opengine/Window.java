@@ -24,6 +24,6 @@ public interface Window {
 	public boolean shouldClose();
 	public void close();
 	public ImageSet getFramebuffer();
-	public int getWidth();
-	public int getHeight();
+	public void dispose();
+	public void setDisplay(ImageSet imageSet);
 }

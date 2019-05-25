@@ -251,12 +251,6 @@ public class MemoryManager {
 		this.logicalDevice = logicalDevice;
 	}
 
-	public Image createFramebufferImage(String name, int bytes) {
-		Image image = new FramebufferImage();
-		this.images.add(image);
-		return image;
-	}
-
 	public Buffer createExclusiveComputeBuffer(String name, int bytes) {
 		Buffer buffer = new Buffer(name, this.logicalDevice, bytes, MemoryManager.Buffer.BufferType.EXCLUSIVESTORAGE);
 		this.buffers.add(buffer);

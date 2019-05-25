@@ -84,6 +84,12 @@ public class WindowManager<W extends Window, WC extends WindowCreator<W>> {
 		this.windowCreator = windowCreator;
 	}
 
+	public void dispose() {
+		for (Window w: this.openWindows) {
+			w.dispose();
+		}
+	}
+
 	/**
 	 * Create a window with the configured default window configuration.
 	 */

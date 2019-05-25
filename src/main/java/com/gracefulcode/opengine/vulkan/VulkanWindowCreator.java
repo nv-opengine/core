@@ -18,6 +18,12 @@ public class VulkanWindowCreator implements WindowCreator<VulkanWindow> {
 		glfwDefaultWindowHints();
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 		glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+		glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
+		// glfwWindowHint(GLFW_RED_BITS, 8);
+		// glfwWindowHint(GLFW_GREEN_BITS, 8);
+		// glfwWindowHint(GLFW_BLUE_BITS, 8);
+		// glfwWindowHint(GLFW_ALPHA_BITS, 8);
+		glfwWindowHint(GLFW_SRGB_CAPABLE, GLFW_TRUE);
 
 		long id = glfwCreateWindow(
 			configuration.width,

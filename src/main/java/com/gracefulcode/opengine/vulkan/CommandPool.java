@@ -25,7 +25,6 @@ import org.lwjgl.vulkan.VkDevice;
 public class CommandPool {
 	protected long commandPool;
 	protected VulkanLogicalDevice logicalDevice;
-	// protected ArrayList<CommandBuffer> commandBuffers = new ArrayList<CommandBuffer>();
 
 	CommandPool(VulkanLogicalDevice logicalDevice, int queueIndex) {
 		this.logicalDevice = logicalDevice;
@@ -46,12 +45,6 @@ public class CommandPool {
 			throw new AssertionError("Could not create command pool: " + Vulkan.translateVulkanResult(err));
 		}
 	}
-
-	// public CommandBuffer getCommandBuffer() {
-	// 	CommandBuffer cb = new CommandBuffer(this.logicalDevice, this.commandPool);
-	// 	this.commandBuffers.add(cb);
-	// 	return cb;
-	// }
 
 	public long getId() {
 		return this.commandPool;

@@ -74,8 +74,8 @@ public class Vulkan {
 		 */
 		public String[] desiredExtensions = {
 			VK_EXT_DEBUG_REPORT_EXTENSION_NAME,
-			VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-			"VK_EXT_debug_utils"
+			VK_KHR_SWAPCHAIN_EXTENSION_NAME
+			// "VK_EXT_debug_utils"
 		};
 	}
 
@@ -83,6 +83,7 @@ public class Vulkan {
 	protected VkPhysicalDevice selectedDevice;
 	protected MemoryManager memoryManager;
 	protected VkInstance instance;
+	protected long callbackHandle;
 	protected WindowManager<VulkanWindow, VulkanWindowCreator> windowManager;
 
 	// Reuse this int buffer for many method calls.
@@ -119,13 +120,6 @@ public class Vulkan {
 			.ppEnabledExtensionNames(extensions)
 			.ppEnabledLayerNames(layers);
 
-		for (int i = 0; i < layers.limit(); i++) {
-			String tmp = layers.getStringUTF8(i);
-			if (tmp.equals(VK_EXT_DEBUG_REPORT_EXTENSION_NAME)) {
-				this.setupDebugging(pCreateInfo);
-			}
-		}
-
 		PointerBuffer pInstance = memAllocPointer(1);
 		int err = vkCreateInstance(pCreateInfo, null, pInstance);
 		long instance = pInstance.get(0);
@@ -136,6 +130,21 @@ public class Vulkan {
 		}
 
 		this.instance = new VkInstance(instance, pCreateInfo);
+
+		boolean foundDebugging = false;
+		for (int i = 0; i < extensions.limit(); i++) {
+			String tmp = extensions.getStringUTF8(i);
+			if (tmp.equals(VK_EXT_DEBUG_REPORT_EXTENSION_NAME)) {
+				foundDebugging = true;
+				this.setupDebugging(pCreateInfo);
+			} else {
+				// System.out.println("Extension: " + tmp);
+			}
+		}
+
+		if (!foundDebugging) {
+			System.out.println("Failed to find extension:" + VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
+		}
 
 		// Initialize all physical devices so that we can choose from them.
 		this.initPhysicalDevices();
@@ -174,6 +183,7 @@ public class Vulkan {
 		for (int i = 0; i < this.ib.get(0); i++) {
 			long physicalDeviceId = pPhysicalDevices.get(i);
 			VulkanPhysicalDevice physicalDevice = new VulkanPhysicalDevice(new VkPhysicalDevice(physicalDeviceId, this.instance));
+			// System.out.println(physicalDevice);
 			this.physicalDevices.add(physicalDevice);
 		}
 		memFree(pPhysicalDevices);
@@ -254,12 +264,15 @@ public class Vulkan {
 			.pUserData(NULL) // <- any user data provided to the debug report callback function
 			.flags(flags); // <- indicates which kind of messages we want to receive
 
-		createInfo.pNext(dbgCreateInfo.address());
+		// createInfo.pNext(dbgCreateInfo.address());
+		// createInfo.pNext(NULL);
 
 		LongBuffer pCallback = memAllocLong(1); // <- allocate a LongBuffer (for a non-dispatchable handle)
 		// Actually create the debug report callback
+
 		int err = vkCreateDebugReportCallbackEXT(this.instance, dbgCreateInfo, null, pCallback);
-		long callbackHandle = pCallback.get(0);
+		this.callbackHandle = pCallback.get(0);
+		System.out.println("Callback handle: " + this.callbackHandle);
 		memFree(pCallback); // <- and free the LongBuffer
 		dbgCreateInfo.free(); // <- and also the create-info struct
 		if (err != VK_SUCCESS) {
@@ -285,16 +298,19 @@ public class Vulkan {
 		this.memoryManager.doneAllocating();
 	}
 
-	public Image createFramebufferImage(String name, int bytes) {
-		return this.memoryManager.createFramebufferImage(name, bytes);
-	}
-
 	public MemoryManager.Buffer createComputeBuffer(String name, int bytes) {
 		return this.memoryManager.createExclusiveComputeBuffer(name, bytes);
 	}
 
 	public void dispose() {
 		memFree(this.ib);
+		this.windowManager.dispose();
+		System.out.println("Destroying callback: " + this.callbackHandle);
+		vkDestroyDebugReportCallbackEXT(
+			this.instance,
+			this.callbackHandle,
+			null
+		);
 		vkDestroyInstance(this.instance, null);
 	}
 
@@ -377,6 +393,7 @@ public class Vulkan {
 					}
 				}
 			}
+
 			// if (!didFind) {
 			// 	System.out.println("    -(" + m + "): " + buffer.extensionNameString());
 			// }
@@ -386,6 +403,38 @@ public class Vulkan {
 		buffer.free();
 
 		return ppEnabledExtensionNames;
+	}
+
+	public static String translatePresentMode(int presentMode) {
+		switch(presentMode) {
+			case VK_PRESENT_MODE_IMMEDIATE_KHR:
+				return "Immediate";
+			case VK_PRESENT_MODE_MAILBOX_KHR:
+				return "Mailbox";
+			case VK_PRESENT_MODE_FIFO_KHR:
+				return "FIFO";
+			case VK_PRESENT_MODE_FIFO_RELAXED_KHR:
+				return "FIFO Relaxed";
+			// case VK_PRESENT_MODE_SHARED_DEMAND_REFRESH_KHR:
+			// 	return "Shared Demand Refresh";
+			// case VK_PRESENT_MODE_SHARED_CONTINUOUS_REFRESH_KHR:
+			// 	return "Shared Continuous Refresh";
+			default:
+				return "Unknown: " + presentMode;
+		}
+	}
+
+	public static String translateFormat(int format) {
+		switch(format) {
+			case VK_FORMAT_UNDEFINED:
+				return "Undefined";
+			case VK_FORMAT_B8G8R8A8_UNORM:
+				return "VK_FORMAT_B8G8R8A8_UNORM";
+			case VK_FORMAT_B8G8R8A8_SRGB:
+				return "VK_FORMAT_B8G8R8A8_SRGB";
+			default:
+				return "Unknown: " + format;
+		}
 	}
 
 	public static String translateVulkanResult(int result) {

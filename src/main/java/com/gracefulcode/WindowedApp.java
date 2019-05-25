@@ -35,7 +35,7 @@ public class WindowedApp {
 		Window vulkanWindow = windowManager.createWindow();
 
 		ImageSet startingImageSet = vulkanWindow.getFramebuffer();
-		System.out.println(startingImageSet);
+		vulkanWindow.setDisplay(startingImageSet);
 
 		// Set up pipeline!
 		// Image frameImage = vulkanWindow.createFramebufferImage();

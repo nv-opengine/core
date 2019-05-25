@@ -4,7 +4,7 @@ import static org.lwjgl.vulkan.KHRSurface.*;
 import static org.lwjgl.system.MemoryUtil.*;
 import static org.lwjgl.vulkan.VK10.*;
 
-import com.gracefulcode.opengine.LogicalDevice;
+// import com.gracefulcode.opengine.LogicalDevice;
 import com.gracefulcode.opengine.PhysicalDevice;
 
 import java.nio.FloatBuffer;
@@ -26,153 +26,23 @@ import org.lwjgl.vulkan.VkQueueFamilyProperties;
 import org.lwjgl.vulkan.VkSurfaceCapabilitiesKHR;
 import org.lwjgl.vulkan.VkSurfaceFormatKHR;
 
+/**
+ * A Physical Device represents a GPU in the system. Many things ultimately
+ * come through here, though we should endeavor to pass as much as possible to
+ * other classes to make things manageable.
+ *
+ * @author Daniel Grace <dgrace@gracefulcode.com>
+ * @version 0.1
+ * @since 0.1
+ */
 public class VulkanPhysicalDevice implements PhysicalDevice<VulkanLogicalDevice> {
-	public static class PhysicalDeviceSurface {
-		protected VulkanPhysicalDevice device;
-		protected long surface;
-		protected VkSurfaceCapabilitiesKHR capabilities;
-		protected IntBuffer ib;
-		protected ArrayList<Format> formats = new ArrayList<Format>();
-		protected ArrayList<PresentMode> presentModes = new ArrayList<PresentMode>();
-
-		/**
-		 * TODO: This should be our own thing, not the VK_* constants.
-		 */
-		public static class Format {
-			public int format;
-			public int colorSpace;
-		}
-
-		/**
-		 * TODO: This should be our own thing, not the VK_* constants.
-		 */
-		public static class PresentMode {
-			public int mode;
-		}
-
-		public PhysicalDeviceSurface(VulkanPhysicalDevice device, long surface) {
-			this.device = device;
-			this.surface = surface;
-
-			this.capabilities = VkSurfaceCapabilitiesKHR.calloc();
-
-			this.ib = memAllocInt(1);
-
-			// Swapchain is being created before this?
-			vkGetPhysicalDeviceSurfaceFormatsKHR(this.device.device, this.surface, this.ib, null);
-
-			VkSurfaceFormatKHR.Buffer formats = VkSurfaceFormatKHR.calloc(this.ib.get(0));
-			vkGetPhysicalDeviceSurfaceFormatsKHR(this.device.device, this.surface, this.ib, formats);
-
-			for (int i = 0; i < formats.limit(); i++) {
-				formats.position(i);
-
-				Format format = new Format();
-				format.format = formats.format();
-				format.colorSpace = formats.colorSpace();
-				this.formats.add(format);
-
-				// COLOR SPACE:
-				// 0: Mac
-				// 0: Windows
-				// Only defined value?!
-				// VK_COLOR_SPACE_SRGB_NONLINEAR_KHR
-
-				// FORMAT
-				// Mac is 44, 50, 97
-				// Windows is 2, 44, 50
-				// Windows other is 4, 44, 50, 37, 43
-				// VK_FORMAT_B8G8R8A8_UNORM <-- preferred
-				// VK_FORMAT_B8G8R8A8_SRGB
-				// VK_FORMAT_R16G16B16A16_SFLOAT
-				// System.out.println("    Format: " + formats.format() + ", Color Space: " + formats.colorSpace());
-			}
-			formats.free();
-
-			this.ib.clear();
-			vkGetPhysicalDeviceSurfacePresentModesKHR(this.device.device, this.surface, this.ib, null);
-			if (ib.get(0) != 0) {
-				IntBuffer ib2 = memAllocInt(ib.get(0));
-				vkGetPhysicalDeviceSurfacePresentModesKHR(this.device.device, this.surface, this.ib, ib2);
-				for (int i = 0; i < ib2.limit(); i++) {
-					PresentMode presentMode = new PresentMode();
-					presentMode.mode = ib2.get(i);
-					this.presentModes.add(presentMode);
-					// Mac has 2, 0
-					// Windows 1 has 2, 3, 1
-					// Windows 2 has 0, 2
-					// 0: PRESENT_MODE_IMMEDIATE_KHR <-- second if MAILBOX unavailable because FIFO can be buggy
-					// 1: PRESENT_MODE_MAILBOX_KHR <-- preferred
-					// 2: PRESENT_MODE_FIFO_KHR <-- guaranteed to exist, so third choice
-					// 3: PRESENT_MODE_FIFO_RELAXED_KHR
-					// Bad, might not even be in here
-					// PRESENT_MODE_SHARED_DEMAND_REFRESH_KHR
-					// PRESENT_MODE_SHARED_CONTINUOUS_REFRESH_KHR
-				}
-			}
-		}
-
-		public long getSurface() {
-			return this.surface;
-		}
-
-		public String toString() {
-			vkGetPhysicalDeviceSurfaceCapabilitiesKHR(this.device.device, this.surface, this.capabilities);
-
-			System.out.println("Surface Capabilities:");
-			// On mac this seems to always be the full size of the screen. I would expect at least one of these
-			// extents to be the window size...
-			// vulkan-tutorial.com says that it should be the window size...
-			System.out.println("    Extent:");
-			System.out.println("        Current: " + capabilities.currentExtent().width() + "x" + capabilities.currentExtent().height());
-			System.out.println("        Max: " + capabilities.maxImageExtent().width() + "x" + capabilities.maxImageExtent().height());
-			System.out.println("        Min: " + capabilities.minImageExtent().width() + "x" + capabilities.minImageExtent().height());
-			// 000000001: Mac
-			// 000000001: Windows
-			// 000000001: IDENTITY
-			// 000000010: ROTATE_90
-			// 000000100: ROTATE_180
-			// 000001000: ROTATE_270
-			// 000010000: HORIZONTAL_MIRROR
-			// 000100000: HORIZONTAL_MIRROR_ROTATE_90
-			// 001000000: HORIZONTAL_MIRROR_ROTATE_180
-			// 010000000: HORIZONTAL_MIRROR_ROTATE_270
-			// 100000000: INHERIT
-			System.out.println("    Transforms:");
-			System.out.println("        Current: " + Integer.toBinaryString(capabilities.currentTransform()));
-			System.out.println("        Supported: " + Integer.toBinaryString(capabilities.supportedTransforms()));
-
-			System.out.println("    Max Image Array Layers: " + capabilities.maxImageArrayLayers());
-			System.out.println("    Image Count: " + capabilities.minImageCount() + "-" + capabilities.maxImageCount());
-			// 0111: Mac
-			// 0001: Windows
-			// 1001: Other Windows
-			// 0001: ALPHA_OPAQUE_BIT
-			// 0010: PRE_MULTIPLIED_BIT
-			// 0100: POST_MULTIPLIED_BIT
-			// 1000: INHERIT_BIT
-			System.out.println("    Supported Composite Alpha: " + Integer.toBinaryString(capabilities.supportedCompositeAlpha()));
-			System.out.println("    Supported Transforms: " + Integer.toBinaryString(capabilities.supportedTransforms()));
-			// 00011111: Mac
-			// 10011111: Windows
-			// 00011111: Other Windows
-			// 00000001: TRANSFER_SRC
-			// 00000010: TRANSFER_DST
-			// 00000100: SAMPLED
-			// 00001000: STORAGE
-			// 00010000: COLOR_ATTACHMENT
-			// 00100000: DEPTH_STENCIL_ATTACHMENT
-			// 01000000: TRANSIENT_ATTACHMENT
-			// 10000000: INPUT_ATTACHMENT
-			System.out.println("    Supported Usage Flags: " + Integer.toBinaryString(capabilities.supportedUsageFlags()));
-			return "";
-		}
-
-		public void dispose() {
-			this.capabilities.free();
-		}
-	}
-
+	/**
+	 * Queues that are available for this Physical Device.
+	 *
+	 * @author Daniel Grace <dgrace@gracefulcode.com>
+	 * @version 0.1
+	 * @since 0.1
+	 */
 	public static class QueueFamilyProperties {
 		public int index;
 		public VkExtent3D minImageTransferGranularity;
@@ -186,7 +56,7 @@ public class VulkanPhysicalDevice implements PhysicalDevice<VulkanLogicalDevice>
 	protected ArrayList<QueueFamilyProperties> queueFamilyProperties = new ArrayList<QueueFamilyProperties>();
 	protected IntBuffer ib;
 	protected PointerBuffer pb;
-	VkPhysicalDevice device;
+	protected VkPhysicalDevice device;
 	protected int graphicsQueueIndex = -1;
 
 	public VulkanPhysicalDevice(VkPhysicalDevice physicalDevice) {
@@ -233,9 +103,11 @@ public class VulkanPhysicalDevice implements PhysicalDevice<VulkanLogicalDevice>
 			);
 			if (this.ib.get(0) == VK_TRUE) {
 				if (!this.surfaceProperties.containsKey(surface)) {
+					PhysicalDeviceSurface pds = new PhysicalDeviceSurface(this, surface);
+					System.out.println("PDS:" + pds);
 					this.surfaceProperties.put(
 						surface,
-						new PhysicalDeviceSurface(this, surface)
+						pds
 					);
 				}
 				return true;
