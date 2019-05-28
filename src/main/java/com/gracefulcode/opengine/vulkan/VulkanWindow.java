@@ -89,7 +89,6 @@ public class VulkanWindow implements Window {
 		this.surface = this.vulkan.getInstance().createSurface(this.windowId);
 
 		this.setupDevice(physicalDevices);
-		// this.findPhysicalSurface();
 		this.createSurface(this.physicalDevice);
 	}
 
@@ -158,6 +157,7 @@ public class VulkanWindow implements Window {
 		for (VulkanPhysicalDevice physicalDevice: devices) {
 			if (physicalDevice.canDisplayToSurface(this.surface)) {
 				this.physicalDevice = physicalDevice;
+				this.logicalDevice = this.physicalDevice.createLogicalDevice(new String[0], true, true);
 				return;
 			}
 		}

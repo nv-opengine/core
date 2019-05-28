@@ -88,6 +88,7 @@ public class SwapChain {
 		createInfo.clipped(true);
 		createInfo.oldSwapchain(0);
 
+		System.out.println("Logical device: " + physicalDeviceSurface.getSurface().getId());
 		int err = vkCreateSwapchainKHR(
 			this.logicalDevice.getDevice(),
 			createInfo,

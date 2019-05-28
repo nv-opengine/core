@@ -1,6 +1,7 @@
 package com.gracefulcode.opengine.vulkan;
 
 import static org.lwjgl.vulkan.KHRSurface.*;
+import static org.lwjgl.vulkan.KHRSwapchain.*;
 import static org.lwjgl.system.MemoryUtil.*;
 import static org.lwjgl.vulkan.VK10.*;
 
@@ -124,10 +125,15 @@ public class VulkanPhysicalDevice implements PhysicalDevice<VulkanLogicalDevice>
 	}
 
 	public VulkanLogicalDevice createLogicalDevice(
-		String[] requiredExtensions,
+		String[] requiredExtensions2,
 		boolean hasGraphicsQueue,
 		boolean hasComputeQueue
 	) {
+		String[] requiredExtensions = {
+			VK_KHR_SWAPCHAIN_EXTENSION_NAME
+			// "VK_EXT_debug_utils"
+		};
+
 		PointerBuffer ppEnabledExtensionNames = memAllocPointer(requiredExtensions.length);
 		for (int i = 0; i < requiredExtensions.length; i++) {
 			ppEnabledExtensionNames.put(memUTF8(requiredExtensions[i]));
