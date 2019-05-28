@@ -2,8 +2,13 @@ package com.gracefulcode.opengine;
 
 /**
  * Represents a set of logically-identical images.
- * These images might not be fully formed -- we might not know their format, etc.
- * Pass these around, collect info on how they are used in order to figure out their info.
+ * These images might not be fully formed -- we might not know their format,
+ * etc. Pass these around, collect info on how they are used in order to figure
+ * out their info.
+ *
+ * @author Daniel Grace <dgrace@gracefulcode.com>
+ * @version 0.1
+ * @since 0.1
  */
 public interface ImageSet {
 	/**

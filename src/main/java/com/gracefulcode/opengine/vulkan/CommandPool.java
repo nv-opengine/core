@@ -20,6 +20,10 @@ import org.lwjgl.vulkan.VkDevice;
  * multiple threads. That includes use via recording commands on any command
  * buffers allocated from the pool, as well as operations that allocate, free,
  * and reset command buffers or the pool itself.
+ *
+ * @author Daniel Grace <dgrace@gracefulcode.com>
+ * @version 0.1
+ * @since 0.1
  */
 @ThreadInfo( perThread = true )
 public class CommandPool {

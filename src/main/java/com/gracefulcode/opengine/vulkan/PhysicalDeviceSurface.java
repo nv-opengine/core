@@ -29,7 +29,7 @@ public class PhysicalDeviceSurface {
 	/**
 	 * The id for the surface in question.
 	 */
-	protected long surface;
+	protected Surface surface;
 
 	/**
 	 * Capabilities of the surface irrespective of configuration options. We
@@ -117,7 +117,7 @@ public class PhysicalDeviceSurface {
 		public int mode;
 	}
 
-	public PhysicalDeviceSurface(VulkanPhysicalDevice device, long surface) {
+	public PhysicalDeviceSurface(VulkanPhysicalDevice device, Surface surface) {
 		this.device = device;
 		this.surface = surface;
 
@@ -125,10 +125,11 @@ public class PhysicalDeviceSurface {
 
 		this.ib = memAllocInt(1);
 
-		vkGetPhysicalDeviceSurfaceFormatsKHR(this.device.device, this.surface, this.ib, null);
+		System.out.println("Here: " + this.device);
+		vkGetPhysicalDeviceSurfaceFormatsKHR(this.device.device, this.surface.getId(), this.ib, null);
 
 		VkSurfaceFormatKHR.Buffer formats = VkSurfaceFormatKHR.calloc(this.ib.get(0));
-		vkGetPhysicalDeviceSurfaceFormatsKHR(this.device.device, this.surface, this.ib, formats);
+		vkGetPhysicalDeviceSurfaceFormatsKHR(this.device.device, this.surface.getId(), this.ib, formats);
 
 		for (int i = 0; i < formats.limit(); i++) {
 			formats.position(i);
@@ -156,10 +157,10 @@ public class PhysicalDeviceSurface {
 		formats.free();
 
 		this.ib.clear();
-		vkGetPhysicalDeviceSurfacePresentModesKHR(this.device.device, this.surface, this.ib, null);
+		vkGetPhysicalDeviceSurfacePresentModesKHR(this.device.device, this.surface.getId(), this.ib, null);
 		if (ib.get(0) != 0) {
 			IntBuffer ib2 = memAllocInt(ib.get(0));
-			vkGetPhysicalDeviceSurfacePresentModesKHR(this.device.device, this.surface, this.ib, ib2);
+			vkGetPhysicalDeviceSurfacePresentModesKHR(this.device.device, this.surface.getId(), this.ib, ib2);
 			for (int i = 0; i < ib2.limit(); i++) {
 				PresentMode presentMode = new PresentMode();
 				presentMode.mode = ib2.get(i);
@@ -178,12 +179,12 @@ public class PhysicalDeviceSurface {
 		}
 	}
 
-	public long getSurface() {
+	public Surface getSurface() {
 		return this.surface;
 	}
 
 	public String toString() {
-		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(this.device.device, this.surface, this.capabilities);
+		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(this.device.device, this.surface.getId(), this.capabilities);
 
 		System.out.println("Surface Capabilities:");
 		// On mac this seems to always be the full size of the screen. I would expect at least one of these

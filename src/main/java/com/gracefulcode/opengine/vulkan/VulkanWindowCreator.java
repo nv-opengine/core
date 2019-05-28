@@ -9,9 +9,11 @@ import org.lwjgl.glfw.GLFWKeyCallback;
 
 public class VulkanWindowCreator implements WindowCreator<VulkanWindow> {
 	protected Vulkan vulkan;
+	protected Iterable<VulkanPhysicalDevice> physicalDevices;
 
-	public VulkanWindowCreator(Vulkan vulkan) {
+	public VulkanWindowCreator(Vulkan vulkan, Iterable<VulkanPhysicalDevice> physicalDevices) {
 		this.vulkan = vulkan;
+		this.physicalDevices = physicalDevices;
 	}
 
 	public VulkanWindow createWindow(Window.Configuration configuration) {
@@ -39,7 +41,7 @@ public class VulkanWindowCreator implements WindowCreator<VulkanWindow> {
 
 		glfwShowWindow(id);
 
-		VulkanWindow vw = new VulkanWindow(this.vulkan, id);
+		VulkanWindow vw = new VulkanWindow(this.vulkan, id, this.physicalDevices);
 		return vw;
 	}
 }

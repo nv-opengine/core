@@ -93,20 +93,19 @@ public class VulkanPhysicalDevice implements PhysicalDevice<VulkanLogicalDevice>
 		queueProps.free();
 	}
 
-	public boolean canDisplayToSurface(long surface) {
+	public boolean canDisplayToSurface(Surface surface) {
 		for (QueueFamilyProperties qpf: this.queueFamilyProperties) {
 			vkGetPhysicalDeviceSurfaceSupportKHR(
 				this.device,
 				qpf.index,
-				surface,
+				surface.getId(),
 				this.ib
 			);
 			if (this.ib.get(0) == VK_TRUE) {
 				if (!this.surfaceProperties.containsKey(surface)) {
 					PhysicalDeviceSurface pds = new PhysicalDeviceSurface(this, surface);
-					System.out.println("PDS:" + pds);
 					this.surfaceProperties.put(
-						surface,
+						surface.getId(),
 						pds
 					);
 				}

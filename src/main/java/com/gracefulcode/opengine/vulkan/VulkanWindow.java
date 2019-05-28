@@ -26,6 +26,7 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.nio.LongBuffer;
 
+import java.lang.Iterable;
 import java.util.HashMap;
 
 /**
@@ -48,8 +49,10 @@ public class VulkanWindow implements Window {
 
 	/**
 	 * The surface is how Vulkan sees our window.
+	 * TODO: Don't need both of these.
 	 */
-	protected long surface;
+	protected Surface surface;
+	protected PhysicalDeviceSurface physicalDeviceSurface;
 
 	protected HashMap<ImageSet, SwapChain> swapChains = new HashMap<ImageSet, SwapChain>();
 	protected SwapChain activeSwapChain;
@@ -80,14 +83,15 @@ public class VulkanWindow implements Window {
 	 */
 	// protected VkRenderPass renderPass;
 
-	VulkanWindow(Vulkan vulkan, long windowId) {
+	VulkanWindow(Vulkan vulkan, long windowId, Iterable<VulkanPhysicalDevice> physicalDevices) {
 		this.vulkan = vulkan;
 		this.ib = memAllocInt(1);
 		this.windowId = windowId;
+		this.surface = this.vulkan.getInstance().createSurface(this.windowId);
 
-		this.createSurface();
-
-		this.findPhysicalSurface();
+		this.setupDevice(physicalDevices);
+		// this.findPhysicalSurface();
+		// this.createSurface(this.physicalDevice);
 	}
 
 	/**
@@ -104,7 +108,12 @@ public class VulkanWindow implements Window {
 
 		int presentMode = VK_PRESENT_MODE_MAILBOX_KHR;
 
-		this.activeSwapChain = new SwapChain(this.logicalDevice, this.capabilities, this.physicalDevice.getSurface(this.surface), presentMode);
+		this.activeSwapChain = new SwapChain(
+			this.logicalDevice,
+			this.capabilities,
+			this.physicalDeviceSurface,
+			presentMode
+		);
 		this.swapChains.put(imageSet, this.activeSwapChain);
 
 		System.out.println("Active swap chain: " + this.activeSwapChain);
@@ -114,7 +123,7 @@ public class VulkanWindow implements Window {
 		for (SwapChain sc: this.swapChains.values()) {
 			sc.dispose();
 		}
-		vkDestroySurfaceKHR(this.vulkan.getInstance(), this.surface, null);;
+		// vkDestroySurfaceKHR(this.vulkan.getInstance(), this.surface, null);
 	}
 
 	public void close() {
@@ -123,15 +132,8 @@ public class VulkanWindow implements Window {
 		this.dispose();
 	}
 
-	protected void createSurface() {
-		LongBuffer lb = memAllocLong(1);
-		int err;
-
-		if ((err = glfwCreateWindowSurface(this.vulkan.getInstance(), this.windowId, null, lb)) != VK_SUCCESS) {
-			throw new AssertionError("Could not create surface: " + Vulkan.translateVulkanResult(err));
-		}
-		this.surface = lb.get(0);
-		memFree(lb);
+	protected void createSurface(VulkanPhysicalDevice physicalDevice) {
+		this.physicalDeviceSurface = new PhysicalDeviceSurface(physicalDevice, this.surface);
 	}
 
 	public ImageSet getImageSet() {
@@ -150,34 +152,25 @@ public class VulkanWindow implements Window {
 		return "VulkanWindow:[id:" + this.windowId + "]";
 	}
 
-	protected VulkanPhysicalDevice findPhysicalDeviceForSurface() {
-		for (VulkanPhysicalDevice device: this.vulkan.getPhysicalDevices()) {
-			if (this.deviceIsSuitableForSurface(device)) {
-				return device;
+	protected void setupDevice(Iterable<VulkanPhysicalDevice> devices) {
+		for (VulkanPhysicalDevice physicalDevice: devices) {
+			if (physicalDevice.canDisplayToSurface(this.surface)) {
+				this.physicalDevice = physicalDevice;
+				return;
 			}
 		}
-
-		return null;
 	}
 
-	/**
-	 * TODO: Find some way to let the user choose which device based on these qualities. Right now
-	 * they cannot filter based on these.
-	 */
-	protected boolean deviceIsSuitableForSurface(VulkanPhysicalDevice physicalDevice) {
-		if (physicalDevice.canDisplayToSurface(this.surface)) return true;
-		return false;
-	}
+	// protected void findPhysicalSurface() {
+	// 	this.physicalDevice = this.findPhysicalDeviceForSurface();
+	// 	System.out.println("Found physical device?" + this.physicalDevice);
+	// 	this.logicalDevice = this.physicalDevice.createLogicalDevice(this.requiredExtensions, true, false);
 
-	protected void findPhysicalSurface() {
-		this.physicalDevice = this.findPhysicalDeviceForSurface();
-		this.logicalDevice = this.physicalDevice.createLogicalDevice(this.requiredExtensions, true, false);
-
-		this.capabilities = VkSurfaceCapabilitiesKHR.calloc();
-		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
-			this.logicalDevice.getPhysicalDevice().getDevice(),
-			this.surface,
-			this.capabilities
-		);
-	}
+	// 	this.capabilities = VkSurfaceCapabilitiesKHR.calloc();
+	// 	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
+	// 		this.logicalDevice.getPhysicalDevice().getDevice(),
+	// 		this.surface.getSurface().getId(),
+	// 		this.capabilities
+	// 	);
+	// }
 }

@@ -16,6 +16,8 @@ import org.lwjgl.vulkan.VkSubpassDescription;
  * know what format the images are going to be in.
  */
 public class RenderPass {
+	protected long id;
+
 	public RenderPass(SwapChain swapChain, VulkanLogicalDevice logicalDevice) {
 		VkAttachmentDescription.Buffer colorAttachment = VkAttachmentDescription.calloc(1);
 		colorAttachment.format(swapChain.getImageFormat());
@@ -45,5 +47,13 @@ public class RenderPass {
 		if (err != VK_SUCCESS) {
 			throw new AssertionError("Error creating render pass: " + Vulkan.translateVulkanResult(err));
 		}
+		this.id = lb.get(0);
+		memFree(lb);
+
+		System.out.println("Created renderpass:" + this.id);
+	}
+
+	public long getId() {
+		return this.id;
 	}
 }

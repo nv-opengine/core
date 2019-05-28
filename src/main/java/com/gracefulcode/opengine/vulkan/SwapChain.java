@@ -67,7 +67,7 @@ public class SwapChain {
 
 		VkSwapchainCreateInfoKHR createInfo = VkSwapchainCreateInfoKHR.calloc();
 		createInfo.sType(VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR);
-		createInfo.surface(physicalDeviceSurface.getSurface());
+		createInfo.surface(physicalDeviceSurface.getSurface().getId());
 		createInfo.minImageCount(this.capabilities.minImageCount());
 		createInfo.imageFormat(this.getImageFormat());
 		createInfo.imageColorSpace(VK_COLOR_SPACE_SRGB_NONLINEAR_KHR);
@@ -164,7 +164,7 @@ public class SwapChain {
 		VkRenderPassBeginInfo renderPassBeginInfo = VkRenderPassBeginInfo.calloc();
 		renderPassBeginInfo.sType(VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO);
 		renderPassBeginInfo.pNext(NULL);
-		renderPassBeginInfo.renderPass();
+		renderPassBeginInfo.renderPass(this.renderPass.getId());
 		renderPassBeginInfo.pClearValues();
 
 		VkRect2D renderArea = renderPassBeginInfo.renderArea();
