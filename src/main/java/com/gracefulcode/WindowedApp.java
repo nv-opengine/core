@@ -14,13 +14,13 @@ public class WindowedApp {
 		WindowManager.Configuration wmConfiguration = new WindowManager.Configuration();
 
 		// TODO: This should be made GLFW agnostic.
-		wmConfiguration.defaultWindowConfiguration.keyCallback = new GLFWKeyCallback() {
-			public void invoke(long window, int key, int scancode, int action, int mods) {
-				if (action != GLFW_RELEASE) return;
-				if (key == GLFW_KEY_ESCAPE) glfwSetWindowShouldClose(window, true);
-			}
-		};
-		wmConfiguration.defaultWindowConfiguration.title = "GOTBK";
+		// wmConfiguration.defaultWindowConfiguration.keyCallback = new GLFWKeyCallback() {
+		// 	public void invoke(long window, int key, int scancode, int action, int mods) {
+		// 		if (action != GLFW_RELEASE) return;
+		// 		if (key == GLFW_KEY_ESCAPE) glfwSetWindowShouldClose(window, true);
+		// 	}
+		// };
+		// wmConfiguration.defaultWindowConfiguration.title = "GOTBK";
 
 		Vulkan.Configuration vulkanConfiguration = new Vulkan.Configuration();
 		vulkanConfiguration.applicationName = "GOTBK";
@@ -28,12 +28,12 @@ public class WindowedApp {
 		// vulkanConfiguration.needCompute = false;
 
 		Vulkan vulkan = Vulkan.initialize(vulkanConfiguration);
-		WindowManager windowManager = vulkan.getWindowManager(wmConfiguration);
+		// WindowManager windowManager = vulkan.getWindowManager(wmConfiguration);
 
-		Window vulkanWindow = windowManager.createWindow();
+		// Window vulkanWindow = windowManager.createWindow();
 
-		ImageSet startingImageSet = vulkanWindow.getFramebuffer();
-		vulkanWindow.setDisplay(startingImageSet);
+		// ImageSet startingImageSet = vulkanWindow.getFramebuffer();
+		// vulkanWindow.setDisplay(startingImageSet);
 
 		// Set up pipeline!
 		// Image frameImage = vulkanWindow.createFramebufferImage();
@@ -47,9 +47,9 @@ public class WindowedApp {
 		// 	)
 		// );
 
-		while (!windowManager.tick()) {
-			// Do game logic here!
-		}
+		// while (!windowManager.tick()) {
+		// 	// Do game logic here!
+		// }
 
 		vulkan.dispose();
     }

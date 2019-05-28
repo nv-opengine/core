@@ -55,9 +55,9 @@ public class WindowManager<W extends Window, WC extends WindowCreator<W>> {
 	/**
 	 * Create a window with the configured default window configuration.
 	 */
-	public W createWindow() {
-		return this.createWindow(this.configuration.defaultWindowConfiguration);
-	}
+	// public W createWindow() {
+	// 	return this.createWindow(this.configuration.defaultWindowConfiguration);
+	// }
 
 	/**
 	 * Create a window with a custom window configuration.
