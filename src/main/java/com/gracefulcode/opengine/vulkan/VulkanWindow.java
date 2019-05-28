@@ -63,7 +63,6 @@ public class VulkanWindow implements Window {
 	// protected SwapChain swapChain;
 	// protected Pipeline pipeline;
 	// protected RenderPass renderPass;
-	protected VkSurfaceCapabilitiesKHR capabilities;
 
 	protected String[] requiredExtensions = {
 		VK_KHR_SWAPCHAIN_EXTENSION_NAME
@@ -91,14 +90,17 @@ public class VulkanWindow implements Window {
 
 		this.setupDevice(physicalDevices);
 		// this.findPhysicalSurface();
-		// this.createSurface(this.physicalDevice);
+		this.createSurface(this.physicalDevice);
 	}
 
 	/**
 	 * Gets the ImageSet that represents our current framebuffer image.
 	 */
 	public ImageSet getFramebuffer() {
-		return new VulkanWindowImageSet(this, this.capabilities.minImageCount());
+		return new VulkanWindowImageSet(
+			this,
+			this.physicalDeviceSurface.getCapabilities().minImageCount()
+		);
 	}
 
 	public void setDisplay(ImageSet imageSet) {
@@ -110,7 +112,7 @@ public class VulkanWindow implements Window {
 
 		this.activeSwapChain = new SwapChain(
 			this.logicalDevice,
-			this.capabilities,
+			this.physicalDeviceSurface.getCapabilities(),
 			this.physicalDeviceSurface,
 			presentMode
 		);
@@ -160,17 +162,4 @@ public class VulkanWindow implements Window {
 			}
 		}
 	}
-
-	// protected void findPhysicalSurface() {
-	// 	this.physicalDevice = this.findPhysicalDeviceForSurface();
-	// 	System.out.println("Found physical device?" + this.physicalDevice);
-	// 	this.logicalDevice = this.physicalDevice.createLogicalDevice(this.requiredExtensions, true, false);
-
-	// 	this.capabilities = VkSurfaceCapabilitiesKHR.calloc();
-	// 	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
-	// 		this.logicalDevice.getPhysicalDevice().getDevice(),
-	// 		this.surface.getSurface().getId(),
-	// 		this.capabilities
-	// 	);
-	// }
 }

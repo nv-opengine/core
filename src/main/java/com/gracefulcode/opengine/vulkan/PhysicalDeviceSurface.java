@@ -179,6 +179,10 @@ public class PhysicalDeviceSurface {
 		}
 	}
 
+	public VkSurfaceCapabilitiesKHR getCapabilities() {
+		return this.capabilities;
+	}
+
 	public Surface getSurface() {
 		return this.surface;
 	}
