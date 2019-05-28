@@ -18,8 +18,8 @@ import org.lwjgl.vulkan.VkQueueFamilyProperties;
 import org.lwjgl.vulkan.VkSurfaceCapabilitiesKHR;
 
 import com.gracefulcode.opengine.ImageSet;
-import com.gracefulcode.opengine.LogicalDevice;
-import com.gracefulcode.opengine.PhysicalDevice;
+import com.gracefulcode.opengine.v2.LogicalDevice;
+import com.gracefulcode.opengine.v2.PhysicalDevice;
 import com.gracefulcode.opengine.Window;
 
 import java.nio.FloatBuffer;

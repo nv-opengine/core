@@ -8,9 +8,10 @@ import static org.lwjgl.vulkan.KHRSurface.*;
 import static org.lwjgl.vulkan.KHRSwapchain.*;
 import static org.lwjgl.vulkan.VK10.*;
 
-import com.gracefulcode.opengine.PhysicalDevice;
+import com.gracefulcode.opengine.v2.PhysicalDevice;
 import com.gracefulcode.opengine.Window;
-import com.gracefulcode.opengine.WindowManager;
+import com.gracefulcode.opengine.v2.WindowManager;
+import com.gracefulcode.opengine.v2.vulkan.VulkanWindowCreator;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -55,7 +56,6 @@ public class Vulkan {
 	protected MemoryManager memoryManager;
 	protected Instance instance;
 	protected long callbackHandle;
-	protected WindowManager<VulkanWindow, VulkanWindowCreator> windowManager;
 
 	// Reuse this int buffer for many method calls.
 	protected IntBuffer ib = memAllocInt(1);
@@ -82,50 +82,6 @@ public class Vulkan {
 	public Instance getInstance() {
 		return this.instance;
 	}
-
-	public WindowManager<VulkanWindow, VulkanWindowCreator> getWindowManager() {
-		return this.getWindowManager(new WindowManager.Configuration());
-	}
-
-	public WindowManager<VulkanWindow, VulkanWindowCreator> getWindowManager(WindowManager.Configuration wmConfiguration) {
-		if (this.windowManager == null) {
-			this.windowManager = new WindowManager<VulkanWindow, VulkanWindowCreator>(wmConfiguration, new VulkanWindowCreator(this, this.instance.getPhysicalDevices()));
-		}
-
-		return this.windowManager;
-	}
-
-	/**
-	 * A pipeline layout defines what arguments we're going to be passing to
-	 * our pipeline. In the case of a compute pipeline, this is basically the
-	 * set of inputs.
-	 */
-	/*
-	public Pipeline createComputePipeline(Shader shader, String entryMethod) {
-		VkPipelineShaderStageCreateInfo stageCreate = VkPipelineShaderStageCreateInfo.calloc();
-		stageCreate.sType(VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO);
-		stageCreate.stage(VK_SHADER_STAGE_COMPUTE_BIT);
-		stageCreate.module(shader.getId());
-		stageCreate.pName(memUTF8(entryMethod));
-
-		LongBuffer lb = memAllocLong(1);
-		lb.put(shader.getLayout());
-		lb.flip();
-
-		VkPipelineLayoutCreateInfo pipelineCreate = VkPipelineLayoutCreateInfo.calloc();
-		pipelineCreate.sType(VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO);
-		pipelineCreate.pSetLayouts(lb);
-
-		LongBuffer lb2 = memAllocLong(1);
-		int err = vkCreatePipelineLayout(this.logicalDevice, pipelineCreate, null, lb2);
-		if (err != VK_SUCCESS) {
-			throw new AssertionError("Failed to create pipeline layout: " + Vulkan.translateVulkanResult(err));
-		}
-		this.pipelineLayoutId = lb2.get(0);
-
-		return null;
-	}
-	*/
 
 	// private final VkDebugReportCallbackEXT dbgFunc = VkDebugReportCallbackEXT.create(
  //        (flags, objectType, object, location, messageCode, pLayerPrefix, pMessage, pUserData) -> {
@@ -210,7 +166,6 @@ public class Vulkan {
 
 	public void dispose() {
 		memFree(this.ib);
-		this.windowManager.dispose();
 		// vkDestroyDebugReportCallbackEXT(
 		// 	this.instance,
 		// 	this.callbackHandle,

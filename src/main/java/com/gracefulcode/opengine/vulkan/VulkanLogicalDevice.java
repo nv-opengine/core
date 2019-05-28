@@ -1,7 +1,7 @@
 package com.gracefulcode.opengine.vulkan;
 
-import com.gracefulcode.opengine.LogicalDevice;
-import com.gracefulcode.opengine.PhysicalDevice;
+import com.gracefulcode.opengine.v2.LogicalDevice;
+import com.gracefulcode.opengine.v2.PhysicalDevice;
 
 import org.lwjgl.vulkan.VkDevice;
 

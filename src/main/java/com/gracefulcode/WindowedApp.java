@@ -3,16 +3,14 @@ package com.gracefulcode;
 import static org.lwjgl.glfw.GLFW.*;
 
 import com.gracefulcode.opengine.ImageSet;
-import com.gracefulcode.opengine.WindowManager;
-import com.gracefulcode.opengine.Window;
-import com.gracefulcode.opengine.vulkan.Vulkan;
+import com.gracefulcode.opengine.v2.WindowManager;
+import com.gracefulcode.opengine.v2.Window;
+import com.gracefulcode.opengine.v2.vulkan.Vulkan;
 
 import org.lwjgl.glfw.GLFWKeyCallback;
 
 public class WindowedApp {
 	public static void main(String[] args) {
-		WindowManager.init();
-
 		WindowManager.Configuration wmConfiguration = new WindowManager.Configuration();
 
 		// TODO: This should be made GLFW agnostic.
@@ -26,10 +24,10 @@ public class WindowedApp {
 
 		Vulkan.Configuration vulkanConfiguration = new Vulkan.Configuration();
 		vulkanConfiguration.applicationName = "GOTBK";
-		vulkanConfiguration.needGraphics = true;
-		vulkanConfiguration.needCompute = false;
+		// vulkanConfiguration.needGraphics = true;
+		// vulkanConfiguration.needCompute = false;
 
-		Vulkan vulkan = new Vulkan(vulkanConfiguration);
+		Vulkan vulkan = Vulkan.initialize(vulkanConfiguration);
 		WindowManager windowManager = vulkan.getWindowManager(wmConfiguration);
 
 		Window vulkanWindow = windowManager.createWindow();

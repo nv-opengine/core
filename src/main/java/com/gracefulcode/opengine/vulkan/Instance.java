@@ -6,6 +6,10 @@ import static org.lwjgl.vulkan.EXTDebugReport.*;
 import static org.lwjgl.vulkan.KHRSwapchain.*;
 import static org.lwjgl.vulkan.VK10.*;
 
+import com.gracefulcode.opengine.v2.vulkan.PhysicalDevice;
+import com.gracefulcode.opengine.v2.vulkan.DefaultPhysicalDeviceSelector;
+import com.gracefulcode.opengine.v2.PhysicalDeviceSelector;
+
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 
@@ -97,7 +101,7 @@ public class Instance {
 	 * All physical devices that this Vulkan knows about.
 	 */
 	// protected ArrayList<VulkanPhysicalDevice> physicalDevices = new ArrayList<VulkanPhysicalDevice>();
-	protected TreeSet<VulkanPhysicalDevice> physicalDevices;
+	protected TreeSet<PhysicalDevice> physicalDevices;
 
 	/**
 	 * Create an Instance with the default Configuration.
@@ -111,7 +115,7 @@ public class Instance {
 	 */
 	public Instance(Configuration configuration) {
 		this.configuration = configuration;
-		this.physicalDevices = new TreeSet<VulkanPhysicalDevice>(this.configuration.physicalDeviceSelector);
+		this.physicalDevices = new TreeSet<PhysicalDevice>(this.configuration.physicalDeviceSelector);
 
 		VkApplicationInfo appInfo = VkApplicationInfo.calloc();
 		appInfo.sType(VK_STRUCTURE_TYPE_APPLICATION_INFO);
@@ -158,7 +162,7 @@ public class Instance {
 	/**
 	 * Can we make this unnecessary?
 	 */
-	TreeSet<VulkanPhysicalDevice> getPhysicalDevices() {
+	TreeSet<PhysicalDevice> getPhysicalDevices() {
 		return this.physicalDevices;
 	}
 
@@ -180,7 +184,7 @@ public class Instance {
 
 		for (int i = 0; i < numPhysicalDevices; i++) {
 			long physicalDeviceId = pPhysicalDevices.get(i);
-			VulkanPhysicalDevice physicalDevice = new VulkanPhysicalDevice(new VkPhysicalDevice(physicalDeviceId, this.instance));
+			PhysicalDevice physicalDevice = new PhysicalDevice(new VkPhysicalDevice(physicalDeviceId, this.instance));
 			this.physicalDevices.add(physicalDevice);
 		}
 		memFree(pPhysicalDevices);

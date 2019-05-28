@@ -5,8 +5,7 @@ import static org.lwjgl.vulkan.KHRSwapchain.*;
 import static org.lwjgl.system.MemoryUtil.*;
 import static org.lwjgl.vulkan.VK10.*;
 
-// import com.gracefulcode.opengine.LogicalDevice;
-import com.gracefulcode.opengine.PhysicalDevice;
+import com.gracefulcode.opengine.v2.PhysicalDevice;
 
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;

@@ -1,4 +1,4 @@
-package com.gracefulcode.opengine;
+package com.gracefulcode.opengine.v2;
 
 public interface PhysicalDevice<T extends LogicalDevice> {
 	public int deviceType();

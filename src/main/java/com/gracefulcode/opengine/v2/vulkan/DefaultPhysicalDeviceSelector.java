@@ -1,6 +1,6 @@
-package com.gracefulcode.opengine.vulkan;
+package com.gracefulcode.opengine.v2.vulkan;
 
-import com.gracefulcode.opengine.PhysicalDevice;
+import com.gracefulcode.opengine.v2.PhysicalDeviceSelector;
 
 /**
  * The default physical device selector should work well for graphics or
@@ -18,7 +18,7 @@ import com.gracefulcode.opengine.PhysicalDevice;
  * If you need something more, you will need to implement your own
  * PhysicalDeviceSelector.
  */
-public class DefaultPhysicalDeviceSelector implements PhysicalDeviceSelector {
+public class DefaultPhysicalDeviceSelector implements PhysicalDeviceSelector<PhysicalDevice> {
 	public int compare(PhysicalDevice a, PhysicalDevice b) {
 		// Return the dedicated graphics card if one exists.
 		int comparison = Integer.compare(b.deviceType(), a.deviceType());
