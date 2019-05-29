@@ -124,28 +124,10 @@ public class Instance {
 		appInfo.pEngineName(memUTF8("Opengine v0.1"));
 		appInfo.apiVersion(VK_MAKE_VERSION(1, 0, 2));
 
-		PointerBuffer extensions = this.getExtensions();
-		PointerBuffer layers = this.getLayers();
-
-		// boolean foundDebugging = false;
-		// for (int i = 0; i < extensions.limit(); i++) {
-		// 	String tmp = extensions.getStringUTF8(i);
-		// 	if (tmp.equals(VK_EXT_DEBUG_REPORT_EXTENSION_NAME)) {
-		// 		foundDebugging = true;
-		// 		this.setupDebugging(pCreateInfo);
-		// 	}
-		// }
-
-		// if (!foundDebugging) {
-		// 	System.out.println("Failed to find extension:" + VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
-		// }
-
 		VkInstanceCreateInfo instanceCreateInfo = VkInstanceCreateInfo.calloc();
 		instanceCreateInfo.sType(VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO);
 		instanceCreateInfo.pNext(NULL);
 		instanceCreateInfo.pApplicationInfo(appInfo);
-		instanceCreateInfo.ppEnabledExtensionNames(extensions);
-		instanceCreateInfo.ppEnabledLayerNames(layers);
 
 		PointerBuffer pInstance = memAllocPointer(1);
 		int err = vkCreateInstance(instanceCreateInfo, null, pInstance);
@@ -198,70 +180,5 @@ public class Instance {
 		}
 
 		return this.windowToSurface.get(windowId);
-	}
-
-	protected PointerBuffer getLayers() {
-		return null;
-	}
-
-	protected PointerBuffer getExtensions() {
-		IntBuffer ib = memAllocInt(1);
-
-		PointerBuffer requiredExtensions = glfwGetRequiredInstanceExtensions();
-		if (requiredExtensions == null) {
-			throw new AssertionError("Failed to find list of required Vulkan extensions");
-		}
-
-		vkEnumerateInstanceExtensionProperties((ByteBuffer)null, ib, null);
-		int result = ib.get(0);
-
-		VkExtensionProperties.Buffer buffer = VkExtensionProperties.calloc(result);
-		vkEnumerateInstanceExtensionProperties((ByteBuffer)null, ib, buffer);
-
-		int limit = buffer.limit();
-
-		PointerBuffer ppEnabledExtensionNames = memAllocPointer(result);
-
-		// PointerBuffer ppEnabledExtensionNames = memAllocPointer(requiredExtensions.remaining() + this.configuration.desiredExtensions.length);
-		ppEnabledExtensionNames.put(requiredExtensions);
-		HashSet<String> enabledExtensions = new HashSet<String>();
-
-		for (int m = 0; m < limit; m++) {
-			buffer.position(m);
-
-			this.configuration.extensionPicker.needsExtension(buffer.extensionNameString(), enabledExtensions);
-
-			/*
-			boolean didFind = false;
-			for (int i = 0; i < requiredExtensions.limit(); i++) {
-				for (int p = 0; p < this.configuration.desiredExtensions.length; p++) {
-					if (requiredExtensions.getStringASCII(i).equals(buffer.extensionNameString())) {
-						didFind = true;
-						break;
-					}
-				}
-			}
-			if (!didFind) {
-				for (int i = 0; i < this.configuration.desiredExtensions.length; i++) {
-					if (buffer.extensionNameString().equals(this.configuration.desiredExtensions[i])) {
-						didFind = true;
-						ppEnabledExtensionNames.put(memUTF8(this.configuration.desiredExtensions[i]));
-						break;
-					}
-				}
-			}
-			*/
-		}
-
-		ppEnabledExtensionNames.flip();
-		buffer.free();
-
-		memFree(ib);
-
-		return ppEnabledExtensionNames;
-	}
-
-	public void dispose() {
-		vkDestroyInstance(this.instance, null);
 	}
 }

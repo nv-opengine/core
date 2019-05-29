@@ -10,7 +10,6 @@ import static org.lwjgl.vulkan.VK10.*;
 
 import com.gracefulcode.opengine.v2.vulkan.PhysicalDevice;
 import com.gracefulcode.opengine.v2.vulkan.VulkanWindowCreator;
-import com.gracefulcode.opengine.v2.WindowManager;
 import com.gracefulcode.opengine.Window;
 
 import java.io.FileNotFoundException;
@@ -106,7 +105,6 @@ public class Vulkan {
 
 	public void dispose() {
 		memFree(this.ib);
-		this.instance.dispose();
 	}
 
 	public static String translatePresentMode(int presentMode) {
