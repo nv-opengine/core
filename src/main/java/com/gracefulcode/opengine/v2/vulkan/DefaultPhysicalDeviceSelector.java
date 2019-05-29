@@ -17,6 +17,10 @@ import com.gracefulcode.opengine.v2.PhysicalDeviceSelector;
  *
  * If you need something more, you will need to implement your own
  * PhysicalDeviceSelector.
+ *
+ * @author Daniel Grace <dgrace@gracefulcode.com>
+ * @version 0.1.1
+ * @since 0.1
  */
 public class DefaultPhysicalDeviceSelector implements PhysicalDeviceSelector<PhysicalDevice> {
 	public int compare(PhysicalDevice a, PhysicalDevice b) {

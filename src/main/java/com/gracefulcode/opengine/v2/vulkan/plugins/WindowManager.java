@@ -4,7 +4,6 @@ import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.glfw.GLFWVulkan.*;
 
 import com.gracefulcode.opengine.v2.vulkan.ExtensionConfiguration;
-import com.gracefulcode.opengine.v2.vulkan.LayerConfiguration;
 import com.gracefulcode.opengine.v2.vulkan.Vulkan;
 import com.gracefulcode.opengine.v2.vulkan.Window;
 
@@ -14,6 +13,14 @@ import org.lwjgl.PointerBuffer;
 import org.lwjgl.vulkan.VkInstance;
 import org.lwjgl.vulkan.VkInstanceCreateInfo;
 
+/**
+ * Adds window manager capabilities to Opengine. Without this plugin, you
+ * cannot open windows at all!
+ *
+ * @author Daniel Grace <dgrace@gracefulcode.com>
+ * @version 0.1.1
+ * @since 0.1.1
+ */
 public class WindowManager implements Plugin {
 	protected ArrayList<Window> openWindows = new ArrayList<Window>();
 	protected VkInstance vkInstance;

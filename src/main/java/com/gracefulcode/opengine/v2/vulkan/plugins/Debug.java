@@ -8,7 +8,6 @@ import com.gracefulcode.opengine.v2.vulkan.ExtensionConfiguration;
 import com.gracefulcode.opengine.v2.vulkan.LayerConfiguration;
 import com.gracefulcode.opengine.v2.vulkan.Vulkan;
 
-// import java.nio.ByteBuffer;
 import java.nio.LongBuffer;
 
 import org.lwjgl.vulkan.VkDebugReportCallbackCreateInfoEXT;
@@ -16,6 +15,16 @@ import org.lwjgl.vulkan.VkDebugReportCallbackEXT;
 import org.lwjgl.vulkan.VkInstance;
 import org.lwjgl.vulkan.VkInstanceCreateInfo;
 
+/**
+ * The Debug plugin enables all of the debugging utilities in Vulkan, if
+ * possible. It then (by default) logs a lot of things to stderr. You can
+ * override info, warning, etc. to customize that. Debugging layers can be a
+ * big performance hit, so you should turn them off in production.
+ *
+ * @author Daniel Grace <dgrace@gracefulcode.com>
+ * @version 0.1.1
+ * @since 0.1.1
+ */
 public class Debug implements Plugin {
 	protected long callbackHandle;
 	protected VkInstance vkInstance;
@@ -133,11 +142,6 @@ public class Debug implements Plugin {
 			} else {
 				this.unknown(objectType, object, location, messageCode, layer, VkDebugReportCallbackEXT.getString(pMessage), pUserData);
 			}
-
-			// System.err.format(
-			// 	"%s: [%s] Code %d : %s\n",
-			// 	type, memASCII(pLayerPrefix), messageCode, VkDebugReportCallbackEXT.getString(pMessage)
-			// );
 
 			/*
 			 * false indicates that layer should not bail-out of an
