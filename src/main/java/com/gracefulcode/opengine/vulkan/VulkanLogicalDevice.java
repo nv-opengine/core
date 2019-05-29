@@ -1,11 +1,10 @@
 package com.gracefulcode.opengine.vulkan;
 
-import com.gracefulcode.opengine.v2.LogicalDevice;
 import com.gracefulcode.opengine.v2.PhysicalDevice;
 
 import org.lwjgl.vulkan.VkDevice;
 
-public class VulkanLogicalDevice implements LogicalDevice {
+public class VulkanLogicalDevice  {
 	protected VulkanPhysicalDevice physicalDevice;
 	protected VkDevice logicalDevice;
 

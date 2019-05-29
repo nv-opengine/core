@@ -35,7 +35,7 @@ import org.lwjgl.vulkan.VkSurfaceFormatKHR;
  * @version 0.1
  * @since 0.1
  */
-public class VulkanPhysicalDevice implements PhysicalDevice<VulkanLogicalDevice> {
+public class VulkanPhysicalDevice implements PhysicalDevice {
 	/**
 	 * Queues that are available for this Physical Device.
 	 *

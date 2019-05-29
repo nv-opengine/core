@@ -14,7 +14,7 @@ import org.lwjgl.vulkan.VkPhysicalDeviceProperties;
  * @version 0.1.1
  * @since 0.1
  */
-public class PhysicalDevice implements com.gracefulcode.opengine.v2.PhysicalDevice<LogicalDevice> {
+public class PhysicalDevice implements com.gracefulcode.opengine.v2.PhysicalDevice {
 	/**
 	 * A reference to lwjgl's version of a physical device.
 	 */
@@ -40,10 +40,6 @@ public class PhysicalDevice implements com.gracefulcode.opengine.v2.PhysicalDevi
 		System.out.println("Driver Version: " + this.properties.driverVersion());
 
 		this.limits = this.properties.limits();
-	}
-
-	public LogicalDevice createLogicalDevice(String[] requiredExtensions, boolean hasGraphicsQueue, boolean hasComputeQueue) {
-		return null;
 	}
 
 	public int deviceType() {
