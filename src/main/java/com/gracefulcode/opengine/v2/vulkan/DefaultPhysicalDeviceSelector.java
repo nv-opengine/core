@@ -1,7 +1,5 @@
 package com.gracefulcode.opengine.v2.vulkan;
 
-import com.gracefulcode.opengine.v2.PhysicalDeviceSelector;
-
 /**
  * The default physical device selector should work well for graphics or
  * compute workloads. For that reason, we actually only key off of two things.

@@ -5,8 +5,6 @@ import static org.lwjgl.vulkan.KHRSwapchain.*;
 import static org.lwjgl.system.MemoryUtil.*;
 import static org.lwjgl.vulkan.VK10.*;
 
-import com.gracefulcode.opengine.v2.PhysicalDevice;
-
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
@@ -35,7 +33,7 @@ import org.lwjgl.vulkan.VkSurfaceFormatKHR;
  * @version 0.1
  * @since 0.1
  */
-public class VulkanPhysicalDevice implements PhysicalDevice {
+public class VulkanPhysicalDevice {
 	/**
 	 * Queues that are available for this Physical Device.
 	 *

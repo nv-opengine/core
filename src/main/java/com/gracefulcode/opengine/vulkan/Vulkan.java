@@ -8,10 +8,10 @@ import static org.lwjgl.vulkan.KHRSurface.*;
 import static org.lwjgl.vulkan.KHRSwapchain.*;
 import static org.lwjgl.vulkan.VK10.*;
 
-import com.gracefulcode.opengine.v2.PhysicalDevice;
-import com.gracefulcode.opengine.Window;
-import com.gracefulcode.opengine.v2.WindowManager;
+import com.gracefulcode.opengine.v2.vulkan.PhysicalDevice;
 import com.gracefulcode.opengine.v2.vulkan.VulkanWindowCreator;
+import com.gracefulcode.opengine.v2.WindowManager;
+import com.gracefulcode.opengine.Window;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;

@@ -8,7 +8,7 @@ import static org.lwjgl.vulkan.VK10.*;
 
 import com.gracefulcode.opengine.v2.vulkan.DefaultPhysicalDeviceSelector;
 import com.gracefulcode.opengine.v2.vulkan.PhysicalDevice;
-import com.gracefulcode.opengine.v2.PhysicalDeviceSelector;
+import com.gracefulcode.opengine.v2.vulkan.PhysicalDeviceSelector;
 
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;

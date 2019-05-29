@@ -19,7 +19,7 @@ import org.lwjgl.vulkan.VkQueueFamilyProperties;
  * @version 0.1.1
  * @since 0.1
  */
-public class PhysicalDevice implements com.gracefulcode.opengine.v2.PhysicalDevice {
+public class PhysicalDevice {
 	/**
 	 * A reference to lwjgl's version of a physical device.
 	 */

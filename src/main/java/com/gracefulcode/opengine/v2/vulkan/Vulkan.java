@@ -9,7 +9,6 @@ import static org.lwjgl.vulkan.KHRDisplaySwapchain.*;
 import static org.lwjgl.vulkan.KHRSurface.*;
 import static org.lwjgl.vulkan.KHRSwapchain.*;
 
-import com.gracefulcode.opengine.v2.PhysicalDeviceSelector;
 import com.gracefulcode.opengine.v2.vulkan.plugins.Plugin;
 
 import java.nio.ByteBuffer;
