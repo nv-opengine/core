@@ -4,6 +4,7 @@ import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.glfw.GLFWVulkan.*;
 
 import com.gracefulcode.opengine.v2.vulkan.ExtensionConfiguration;
+import com.gracefulcode.opengine.v2.vulkan.PhysicalDevice;
 import com.gracefulcode.opengine.v2.vulkan.Vulkan;
 import com.gracefulcode.opengine.v2.vulkan.Window;
 
@@ -40,6 +41,10 @@ public class WindowManager implements Plugin {
 		}
 
 		configuration.plugins.add(this);
+	}
+
+	public boolean canUsePhysicalDevice(PhysicalDevice physicalDevice) {
+		return true;
 	}
 
 	public Window createWindow(com.gracefulcode.opengine.v2.Window.Configuration configuration) {

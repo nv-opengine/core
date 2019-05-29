@@ -9,6 +9,7 @@ import static org.lwjgl.vulkan.KHRDisplaySwapchain.*;
 import static org.lwjgl.vulkan.KHRSurface.*;
 import static org.lwjgl.vulkan.KHRSwapchain.*;
 
+import com.gracefulcode.opengine.v2.PhysicalDeviceSelector;
 import com.gracefulcode.opengine.v2.vulkan.plugins.Plugin;
 
 import java.nio.ByteBuffer;
@@ -17,6 +18,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.TreeSet;
 
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.vulkan.VkApplicationInfo;
@@ -75,6 +77,7 @@ public class Vulkan {
 		public ExtensionConfiguration extensionConfiguration = new ExtensionConfiguration();
 		public LayerConfiguration layerConfiguration = new LayerConfiguration();
 		public ArrayList<Plugin> plugins = new ArrayList<Plugin>();
+		public PhysicalDeviceSelector physicalDeviceSelector = new DefaultPhysicalDeviceSelector();
 	}
 
 	/**
@@ -82,6 +85,7 @@ public class Vulkan {
 	 */
 	protected Configuration configuration;
 	protected VkInstance vkInstance;
+	protected TreeSet<PhysicalDevice> physicalDevices;
 
 	/**
 	 * Initializing Vulkan multiple times is not allowed. This is the one and
@@ -135,6 +139,7 @@ public class Vulkan {
 	 */
 	private Vulkan(Configuration configuration) {
 		this.configuration = configuration;
+		this.physicalDevices = new TreeSet<PhysicalDevice>(this.configuration.physicalDeviceSelector);
 
 		/**
 		 * appInfo is basic information about the application itself. There
@@ -169,12 +174,12 @@ public class Vulkan {
 		PointerBuffer configuredExtensions = this.configuration.extensionConfiguration.getConfiguredExtensions();
 		createInfo.ppEnabledExtensionNames(configuredExtensions);
 
-		System.out.println(this.configuration.extensionConfiguration);
-		System.out.println(this.configuration.layerConfiguration);
-
 		PointerBuffer configuredLayers = this.configuration.layerConfiguration.getConfiguredLayers();
 		createInfo.ppEnabledLayerNames(configuredLayers);
 
+		/**
+		 * Actually create the VkInstance.
+		 */
 		PointerBuffer pInstance = memAllocPointer(1);
 		int err = vkCreateInstance(createInfo, null, pInstance);
 		long vulkanInstanceId = pInstance.get(0);
@@ -186,9 +191,48 @@ public class Vulkan {
 
 		this.vkInstance = new VkInstance(vulkanInstanceId, createInfo);
 
+		/**
+		 * Call the plugins after creation.
+		 */
 		for (Plugin plugin: this.configuration.plugins) {
 			plugin.postCreate(this.vkInstance);
 		}
+
+		/**
+		 * Get the physical devices that we have access to.
+		 */
+		IntBuffer ib = memAllocInt(1);
+		err = vkEnumeratePhysicalDevices(this.vkInstance, ib, null);
+		if (err != VK_SUCCESS) {
+			throw new AssertionError("Failed to get number of physical devices: " + Vulkan.translateVulkanResult(err));
+		}
+
+		int numPhysicalDevices = ib.get(0);
+
+		PointerBuffer pPhysicalDevices = memAllocPointer(numPhysicalDevices);
+		err = vkEnumeratePhysicalDevices(this.vkInstance, ib, pPhysicalDevices);
+		memFree(ib);
+		if (err != VK_SUCCESS) {
+			throw new AssertionError("Failed to get physical devices: " + Vulkan.translateVulkanResult(err));
+		}
+
+		for (int i = 0; i < numPhysicalDevices; i++) {
+			long physicalDeviceId = pPhysicalDevices.get(i);
+			PhysicalDevice physicalDevice = new PhysicalDevice(physicalDeviceId, this.vkInstance);
+
+			boolean passedCheck = true;
+			for (Plugin plugin: this.configuration.plugins) {
+				if (!plugin.canUsePhysicalDevice(physicalDevice)) {
+					passedCheck = false;
+					break;
+				}
+			}
+			if (passedCheck) {
+				this.physicalDevices.add(physicalDevice);
+			}
+		}
+
+		memFree(pPhysicalDevices);
 	}
 
 	public void dispose() {

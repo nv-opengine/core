@@ -6,6 +6,7 @@ import static org.lwjgl.vulkan.VK10.*;
 
 import com.gracefulcode.opengine.v2.vulkan.ExtensionConfiguration;
 import com.gracefulcode.opengine.v2.vulkan.LayerConfiguration;
+import com.gracefulcode.opengine.v2.vulkan.PhysicalDevice;
 import com.gracefulcode.opengine.v2.vulkan.Vulkan;
 
 import java.nio.LongBuffer;
@@ -37,6 +38,10 @@ public class Debug implements Plugin {
 		configuration.extensionConfiguration.setExtension("VK_EXT_debug_report", isRequired ? ExtensionConfiguration.RequireType.REQUIRED : ExtensionConfiguration.RequireType.DESIRED);
 		configuration.layerConfiguration.setLayer("VK_LAYER_LUNARG_core_validation", LayerConfiguration.RequireType.REQUIRED);
 		configuration.plugins.add(this);
+	}
+
+	public boolean canUsePhysicalDevice(PhysicalDevice physicalDevice) {
+		return true;
 	}
 
 	protected void info(int objectType, long object, long location, int messageCode, String pLayerString, String message, long pUserData) {

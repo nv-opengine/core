@@ -1,5 +1,7 @@
 package com.gracefulcode.opengine.v2.vulkan.plugins;
 
+import com.gracefulcode.opengine.v2.vulkan.PhysicalDevice;
+
 import org.lwjgl.vulkan.VkInstance;
 import org.lwjgl.vulkan.VkInstanceCreateInfo;
 
@@ -24,6 +26,11 @@ public interface Plugin {
 	 * @param instance The VkInstance that was just created.
 	 */
 	public void postCreate(VkInstance instance);
+
+	/**
+	 * Plugins can reject a physical device for any reason.
+	 */
+	public boolean canUsePhysicalDevice(PhysicalDevice physicalDevice);
 
 	/**
 	 * Called during teardown. Clean up your stuff.
