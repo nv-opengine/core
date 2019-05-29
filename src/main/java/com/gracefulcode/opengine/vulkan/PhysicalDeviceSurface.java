@@ -4,8 +4,9 @@ import static org.lwjgl.vulkan.KHRSurface.*;
 import static org.lwjgl.system.MemoryUtil.*;
 import static org.lwjgl.vulkan.VK10.*;
 
-import java.nio.IntBuffer;
+import com.gracefulcode.opengine.v2.vulkan.Surface;
 
+import java.nio.IntBuffer;
 import java.util.ArrayList;
 
 import org.lwjgl.vulkan.VkSurfaceCapabilitiesKHR;

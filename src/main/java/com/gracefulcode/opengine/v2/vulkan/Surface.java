@@ -1,4 +1,4 @@
-package com.gracefulcode.opengine.vulkan;
+package com.gracefulcode.opengine.v2.vulkan;
 
 import static org.lwjgl.glfw.GLFWVulkan.*;
 import static org.lwjgl.system.MemoryUtil.*;
@@ -8,23 +8,29 @@ import java.nio.LongBuffer;
 
 import org.lwjgl.vulkan.VkInstance;
 
+/**
+ * A surface is an OS-specific representation of the backbuffer of a window. We
+ * don't have to allocate the memory for this, but we likewise don't have much
+ * control.
+ *
+ * @author Daniel Grace <dgrace@gracefulcode.com>
+ * @version 0.1.1
+ * @since 0.1.1
+ */
 public class Surface {
 	protected long id;
 
-	public Surface(long windowId, VkInstance vkInstance) {
+	public Surface(long windowId, Vulkan vulkan) {
 		LongBuffer lb = memAllocLong(1);
 		int err;
 
-		if ((err = glfwCreateWindowSurface(vkInstance, windowId, null, lb)) != VK_SUCCESS) {
+		if ((err = glfwCreateWindowSurface(vulkan.getVkInstance(), windowId, null, lb)) != VK_SUCCESS) {
 			throw new AssertionError("Could not create surface: " + Vulkan.translateVulkanResult(err));
 		}
 		this.id = lb.get(0);
 		memFree(lb);
 	}
 
-	/**
-	 * TODO: Get rid of this.
-	 */
 	public long getId() {
 		return this.id;
 	}

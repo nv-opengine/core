@@ -234,6 +234,10 @@ public class Vulkan {
 		memFree(pPhysicalDevices);
 	}
 
+	public VkInstance getVkInstance() {
+		return this.vkInstance;
+	}
+
 	public void dispose() {
 		for (Plugin plugin: this.configuration.plugins) {
 			plugin.dispose();

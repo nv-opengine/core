@@ -93,11 +93,6 @@ public class Instance {
 	protected Configuration configuration;
 
 	/**
-	 * Given a windowID, give us a Surface object.
-	 */
-	protected HashMap<Long, Surface> windowToSurface = new HashMap<Long, Surface>();
-
-	/**
 	 * All physical devices that this Vulkan knows about.
 	 */
 	// protected ArrayList<VulkanPhysicalDevice> physicalDevices = new ArrayList<VulkanPhysicalDevice>();
@@ -172,13 +167,5 @@ public class Instance {
 		}
 		memFree(pPhysicalDevices);
 		memFree(ib);
-	}
-
-	public Surface createSurface(long windowId) {
-		if (!this.windowToSurface.containsKey(windowId)) {
-			this.windowToSurface.put(windowId, new Surface(windowId, this.instance));
-		}
-
-		return this.windowToSurface.get(windowId);
 	}
 }

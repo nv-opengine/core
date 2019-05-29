@@ -72,17 +72,6 @@ public class Vulkan {
 		}
 
 		this.instance = new Instance();
-
-		// Initialize all physical devices so that we can choose from them.
-		// this.initPhysicalDevices();
-	}
-
-	public Instance getInstance() {
-		return this.instance;
-	}
-
-	public void dispose() {
-		memFree(this.ib);
 	}
 
 	public static String translateVulkanResult(int result) {

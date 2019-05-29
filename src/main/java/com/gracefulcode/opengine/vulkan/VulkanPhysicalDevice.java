@@ -88,6 +88,7 @@ public class VulkanPhysicalDevice {
 		queueProps.free();
 	}
 
+	/*
 	public boolean canDisplayToSurface(Surface surface) {
 		for (QueueFamilyProperties qpf: this.queueFamilyProperties) {
 			vkGetPhysicalDeviceSurfaceSupportKHR(
@@ -109,6 +110,7 @@ public class VulkanPhysicalDevice {
 		}
 		return false;
 	}
+	*/
 
 	public PhysicalDeviceSurface getSurface(long surface) {
 		return this.surfaceProperties.get(surface);

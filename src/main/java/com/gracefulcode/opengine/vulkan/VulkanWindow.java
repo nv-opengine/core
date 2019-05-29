@@ -50,7 +50,7 @@ public class VulkanWindow implements Window {
 	 * The surface is how Vulkan sees our window.
 	 * TODO: Don't need both of these.
 	 */
-	protected Surface surface;
+	// protected Surface surface;
 	protected PhysicalDeviceSurface physicalDeviceSurface;
 
 	protected HashMap<ImageSet, SwapChain> swapChains = new HashMap<ImageSet, SwapChain>();
@@ -85,10 +85,6 @@ public class VulkanWindow implements Window {
 		this.vulkan = vulkan;
 		this.ib = memAllocInt(1);
 		this.windowId = windowId;
-		this.surface = this.vulkan.getInstance().createSurface(this.windowId);
-
-		this.setupDevice(physicalDevices);
-		this.createSurface(this.physicalDevice);
 	}
 
 	/**
@@ -132,10 +128,6 @@ public class VulkanWindow implements Window {
 		this.dispose();
 	}
 
-	protected void createSurface(VulkanPhysicalDevice physicalDevice) {
-		this.physicalDeviceSurface = new PhysicalDeviceSurface(physicalDevice, this.surface);
-	}
-
 	public ImageSet getImageSet() {
 		return null;
 	}
@@ -150,15 +142,5 @@ public class VulkanWindow implements Window {
 
 	public String toString() {
 		return "VulkanWindow:[id:" + this.windowId + "]";
-	}
-
-	protected void setupDevice(Iterable<VulkanPhysicalDevice> devices) {
-		for (VulkanPhysicalDevice physicalDevice: devices) {
-			if (physicalDevice.canDisplayToSurface(this.surface)) {
-				this.physicalDevice = physicalDevice;
-				this.logicalDevice = this.physicalDevice.createLogicalDevice(new String[0], true, true);
-				return;
-			}
-		}
 	}
 }
