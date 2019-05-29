@@ -236,17 +236,6 @@ public class PhysicalDeviceSurface {
 		// 10000000: INPUT_ATTACHMENT
 		System.out.println("    Supported Usage Flags: " + Integer.toBinaryString(capabilities.supportedUsageFlags()));
 
-		System.out.println("Formats:");
-		for (Format f: this.formats) {
-			System.out.println("    -");
-			System.out.println("     Format: " + Vulkan.translateFormat(f.format));
-			System.out.println("     Color Space: " + f.colorSpace);
-		}
-
-		System.out.println("Present Mode:");
-		for (PresentMode pm: this.presentModes) {
-			System.out.println("    " + Vulkan.translatePresentMode(pm.mode));
-		}
 		return "";
 	}
 

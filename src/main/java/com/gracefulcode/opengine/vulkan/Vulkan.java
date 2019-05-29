@@ -81,62 +81,8 @@ public class Vulkan {
 		return this.instance;
 	}
 
-	// public Shader createComputeShader(String fileName) throws FileNotFoundException, IOException {
-	// 	// Do we want to eventually have some sort of shader controller?
-	// 	Shader shader = new Shader(this.logicalDevice, "comp.spv", VK_SHADER_STAGE_COMPUTE_BIT);
-	// 	return shader;
-	// }
-
-	// public VkInstance getInstance() {
-	// 	return this.instance;
-	// }
-
-	public Image clearImage(Image inputImage) {
-		return null;
-	}
-
-	public void doneAllocating() {
-		this.memoryManager.doneAllocating();
-	}
-
-	public MemoryManager.Buffer createComputeBuffer(String name, int bytes) {
-		return this.memoryManager.createExclusiveComputeBuffer(name, bytes);
-	}
-
 	public void dispose() {
 		memFree(this.ib);
-	}
-
-	public static String translatePresentMode(int presentMode) {
-		switch(presentMode) {
-			case VK_PRESENT_MODE_IMMEDIATE_KHR:
-				return "Immediate";
-			case VK_PRESENT_MODE_MAILBOX_KHR:
-				return "Mailbox";
-			case VK_PRESENT_MODE_FIFO_KHR:
-				return "FIFO";
-			case VK_PRESENT_MODE_FIFO_RELAXED_KHR:
-				return "FIFO Relaxed";
-			// case VK_PRESENT_MODE_SHARED_DEMAND_REFRESH_KHR:
-			// 	return "Shared Demand Refresh";
-			// case VK_PRESENT_MODE_SHARED_CONTINUOUS_REFRESH_KHR:
-			// 	return "Shared Continuous Refresh";
-			default:
-				return "Unknown: " + presentMode;
-		}
-	}
-
-	public static String translateFormat(int format) {
-		switch(format) {
-			case VK_FORMAT_UNDEFINED:
-				return "Undefined";
-			case VK_FORMAT_B8G8R8A8_UNORM:
-				return "VK_FORMAT_B8G8R8A8_UNORM";
-			case VK_FORMAT_B8G8R8A8_SRGB:
-				return "VK_FORMAT_B8G8R8A8_SRGB";
-			default:
-				return "Unknown: " + format;
-		}
 	}
 
 	public static String translateVulkanResult(int result) {
