@@ -64,6 +64,11 @@ dependencies {
 // Define the main class for the application
 mainClassName = 'com.gracefulcode.WindowedApp'
 
+tasks.withType(JavaCompile) {
+    options.compilerArgs << '-Xlint:unchecked'
+    options.deprecation = true
+}
+
 run {
     switch (OperatingSystem.current()) {
         case OperatingSystem.LINUX:

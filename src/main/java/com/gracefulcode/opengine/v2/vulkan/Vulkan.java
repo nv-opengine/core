@@ -4,15 +4,26 @@ import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.glfw.GLFWVulkan.*;
 import static org.lwjgl.system.MemoryUtil.*;
 import static org.lwjgl.vulkan.VK10.*;
+import static org.lwjgl.vulkan.EXTDebugReport.*;
+import static org.lwjgl.vulkan.KHRDisplaySwapchain.*;
+import static org.lwjgl.vulkan.KHRSurface.*;
+import static org.lwjgl.vulkan.KHRSwapchain.*;
+
+import com.gracefulcode.opengine.v2.vulkan.plugins.Plugin;
 
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.vulkan.VkApplicationInfo;
 import org.lwjgl.vulkan.VkExtensionProperties;
+import org.lwjgl.vulkan.VkInstance;
 import org.lwjgl.vulkan.VkInstanceCreateInfo;
+import org.lwjgl.vulkan.VkLayerProperties;
 
 /**
  * The main interface between end-user code and the Vulkan backend.
@@ -31,18 +42,46 @@ public class Vulkan {
 	 */
 	public static class Configuration {
 		/**
+		 * What's the status of this layer/extenion?
+		 *
+		 * DONT_CARE:
+		 *     Nothing has modified this. This won't be asked for if it ends in
+		 *     this state, and most things start in this state.
+		 * NOT_DESIRED:
+		 *     We do NOT want this to be enabled. If one piece has NOT_DESIRED
+		 *     and another has DESIRED, we have a fatal conflict.
+		 * DESIRED:
+		 *     We want this, but it's not a fatal error if we don't get it.
+		 * REQUIRED:
+		 *     It's a fatal error if we cannot have this extension/layer. If
+		 *     one thing says REQUIRED and another says NOT_DESIRED, we have a
+		 *     fatal conflict.
+		 */
+		public static enum RequireType {
+			DONT_CARE,
+			NOT_DESIRED,
+			DESIRED,
+			REQUIRED
+		};
+
+		/**
 		 * Your application name is passed to Vulkan in case your game gets
 		 * super popular and they want to tweak their driver for your game.
 		 * This should be something unique, but it is not that important at
 		 * the end of the day.
 		 */
 		public String applicationName = "";
+
+		public ExtensionConfiguration extensionConfiguration = new ExtensionConfiguration();
+		public LayerConfiguration layerConfiguration = new LayerConfiguration();
+		public ArrayList<Plugin> plugins = new ArrayList<Plugin>();
 	}
 
 	/**
 	 * The configuration that we are using.
 	 */
 	protected Configuration configuration;
+	protected VkInstance vkInstance;
 
 	/**
 	 * Initializing Vulkan multiple times is not allowed. This is the one and
@@ -117,43 +156,102 @@ public class Vulkan {
 		VkInstanceCreateInfo createInfo = VkInstanceCreateInfo.calloc();
 		createInfo.sType(VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO);
 		createInfo.pApplicationInfo(appInfo);
+		createInfo.pNext(NULL);
 
 		/**
-		 * requiredExtensions are the extensions that glfw needs to properly
-		 * work. If our vulkan doesn't support these extensions, we should exit
-		 * pretty early -- we can't do anything anyway.
+		 * Allow plugins to modify this. I think there's some advanced way
+		 * that I can do debugging that uses this. Right now nothing uses it.
 		 */
-		PointerBuffer requiredExtensions = glfwGetRequiredInstanceExtensions();
-		if (requiredExtensions == null) {
-			throw new AssertionError("Failed to find list of required Vulkan extensions");
+		for (Plugin plugin: this.configuration.plugins) {
+			plugin.setupCreateInfo(createInfo);
 		}
 
-		/**
-		 * Now let's see what extensions this version of vulkan actually
-		 * supports!
-		 */
-		IntBuffer ib = memAllocInt(1);
-		vkEnumerateInstanceExtensionProperties((ByteBuffer)null, ib, null);
-		int result = ib.get(0);
+		PointerBuffer configuredExtensions = this.configuration.extensionConfiguration.getConfiguredExtensions();
+		createInfo.ppEnabledExtensionNames(configuredExtensions);
 
-		VkExtensionProperties.Buffer buffer = VkExtensionProperties.calloc(result);
-		vkEnumerateInstanceExtensionProperties((ByteBuffer)null, ib, buffer);
+		System.out.println(this.configuration.extensionConfiguration);
+		System.out.println(this.configuration.layerConfiguration);
 
-		int instanceExtensionCount = buffer.limit();
+		PointerBuffer configuredLayers = this.configuration.layerConfiguration.getConfiguredLayers();
+		createInfo.ppEnabledLayerNames(configuredLayers);
 
-		PointerBuffer ppEnabledExtensionNames = memAllocPointer(result);
+		PointerBuffer pInstance = memAllocPointer(1);
+		int err = vkCreateInstance(createInfo, null, pInstance);
+		long vulkanInstanceId = pInstance.get(0);
+		memFree(pInstance);
 
-		ppEnabledExtensionNames.put(requiredExtensions);
-		HashSet<String> enabledExtensions = new HashSet<String>();
-
-		for (int m = 0; m < instanceExtensionCount; m++) {
-			buffer.position(m);
-			System.out.println("Extension: " + buffer.extensionNameString());
+		if (err != VK_SUCCESS) {
+			throw new AssertionError("Failed to create VkInstance: " + Vulkan.translateVulkanResult(err));
 		}
 
+		this.vkInstance = new VkInstance(vulkanInstanceId, createInfo);
+
+		for (Plugin plugin: this.configuration.plugins) {
+			plugin.postCreate(this.vkInstance);
+		}
 	}
 
 	public void dispose() {
+		for (Plugin plugin: this.configuration.plugins) {
+			plugin.dispose();
+		}
+		vkDestroyInstance(this.vkInstance, null);
+	}
 
+	public static String translateVulkanResult(int result) {
+		switch (result) {
+			// Success codes
+			case VK_SUCCESS:
+				return "Command successfully completed.";
+			case VK_NOT_READY:
+				return "A fence or query has not yet completed.";
+			case VK_TIMEOUT:
+				return "A wait operation has not completed in the specified time.";
+			case VK_EVENT_SET:
+				return "An event is signaled.";
+			case VK_EVENT_RESET:
+				return "An event is unsignaled.";
+			case VK_INCOMPLETE:
+				return "A return array was too small for the result.";
+			case VK_SUBOPTIMAL_KHR:
+				return "A swapchain no longer matches the surface properties exactly, but can still be used to present to the surface successfully.";
+
+			// Error codes
+			case VK_ERROR_OUT_OF_HOST_MEMORY:
+				return "A host memory allocation has failed.";
+			case VK_ERROR_OUT_OF_DEVICE_MEMORY:
+				return "A device memory allocation has failed.";
+			case VK_ERROR_INITIALIZATION_FAILED:
+				return "Initialization of an object could not be completed for implementation-specific reasons.";
+			case VK_ERROR_DEVICE_LOST:
+				return "The logical or physical device has been lost.";
+			case VK_ERROR_MEMORY_MAP_FAILED:
+				return "Mapping of a memory object has failed.";
+			case VK_ERROR_LAYER_NOT_PRESENT:
+				return "A requested layer is not present or could not be loaded.";
+			case VK_ERROR_EXTENSION_NOT_PRESENT:
+				return "A requested extension is not supported.";
+			case VK_ERROR_FEATURE_NOT_PRESENT:
+				return "A requested feature is not supported.";
+			case VK_ERROR_INCOMPATIBLE_DRIVER:
+				return "The requested version of Vulkan is not supported by the driver or is otherwise incompatible for implementation-specific reasons.";
+			case VK_ERROR_TOO_MANY_OBJECTS:
+				return "Too many objects of the type have already been created.";
+			case VK_ERROR_FORMAT_NOT_SUPPORTED:
+				return "A requested format is not supported on this device.";
+			case VK_ERROR_SURFACE_LOST_KHR:
+				return "A surface is no longer available.";
+			case VK_ERROR_NATIVE_WINDOW_IN_USE_KHR:
+				return "The requested window is already connected to a VkSurfaceKHR, or to some other non-Vulkan API.";
+			case VK_ERROR_OUT_OF_DATE_KHR:
+				return "A surface has changed in such a way that it is no longer compatible with the swapchain, and further presentation requests using the "
+					+ "swapchain will fail. Applications must query the new surface properties and recreate their swapchain if they wish to continue" + "presenting to the surface.";
+			case VK_ERROR_INCOMPATIBLE_DISPLAY_KHR:
+				return "The display used by a swapchain does not use the same presentable image layout, or is incompatible in a way that prevents sharing an" + " image.";
+			case VK_ERROR_VALIDATION_FAILED_EXT:
+				return "A validation layer found an error.";
+			default:
+				return String.format("%s [%d]", "Unknown", Integer.valueOf(result));
+		}
 	}
 }

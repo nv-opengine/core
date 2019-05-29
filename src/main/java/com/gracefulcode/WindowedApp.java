@@ -1,34 +1,30 @@
 package com.gracefulcode;
 
-import static org.lwjgl.glfw.GLFW.*;
-
-import com.gracefulcode.opengine.ImageSet;
-import com.gracefulcode.opengine.v2.WindowManager;
 import com.gracefulcode.opengine.v2.Window;
+import com.gracefulcode.opengine.v2.vulkan.ExtensionConfiguration;
+import com.gracefulcode.opengine.v2.vulkan.plugins.Debug;
+import com.gracefulcode.opengine.v2.vulkan.plugins.WindowManager;
 import com.gracefulcode.opengine.v2.vulkan.Vulkan;
-
-import org.lwjgl.glfw.GLFWKeyCallback;
 
 public class WindowedApp {
 	public static void main(String[] args) {
-		WindowManager.Configuration wmConfiguration = new WindowManager.Configuration();
-
-		// TODO: This should be made GLFW agnostic.
-		// wmConfiguration.defaultWindowConfiguration.keyCallback = new GLFWKeyCallback() {
-		// 	public void invoke(long window, int key, int scancode, int action, int mods) {
-		// 		if (action != GLFW_RELEASE) return;
-		// 		if (key == GLFW_KEY_ESCAPE) glfwSetWindowShouldClose(window, true);
-		// 	}
-		// };
-		// wmConfiguration.defaultWindowConfiguration.title = "GOTBK";
-
 		Vulkan.Configuration vulkanConfiguration = new Vulkan.Configuration();
 		vulkanConfiguration.applicationName = "GOTBK";
-		// vulkanConfiguration.needGraphics = true;
-		// vulkanConfiguration.needCompute = false;
 
+		// Allows the debug plugin to register itself. Should be done before initialize.
+		// By default the debug plugin will not cause errors to be thrown if it cannot work.
+		// This is largely because MoltenVK doesn't support debugging.
+		// You should turn debugging off in production. It can make things much slower.
+		Debug debugPlugin = new Debug(vulkanConfiguration);
+		WindowManager windowManagerPlugin = new WindowManager(vulkanConfiguration);
+
+		// Create our vulkan instance.
 		Vulkan vulkan = Vulkan.initialize(vulkanConfiguration);
-		// WindowManager windowManager = vulkan.getWindowManager(wmConfiguration);
+
+		Window.Configuration windowConfiguration = new Window.Configuration();
+		Window vulkanWindow = windowManagerPlugin.createWindow(windowConfiguration);
+
+		// WindowManager windowManager = vulkan.getWindowManager();
 
 		// Window vulkanWindow = windowManager.createWindow();
 
@@ -47,9 +43,9 @@ public class WindowedApp {
 		// 	)
 		// );
 
-		// while (!windowManager.tick()) {
-		// 	// Do game logic here!
-		// }
+		while (!windowManagerPlugin.tick()) {
+			// Do game logic here!
+		}
 
 		vulkan.dispose();
     }

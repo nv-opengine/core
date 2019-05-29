@@ -2,7 +2,6 @@ package com.gracefulcode.opengine.v2.vulkan;
 
 import static org.lwjgl.glfw.GLFW.*;
 
-import com.gracefulcode.opengine.v2.Window;
 import com.gracefulcode.opengine.v2.WindowCreator;
 
 import org.lwjgl.glfw.GLFWKeyCallback;
@@ -14,7 +13,7 @@ import org.lwjgl.glfw.GLFWKeyCallback;
  * @version 0.1.1
  * @since 0.1
  */
-public class VulkanWindowCreator implements WindowCreator<VulkanWindow> {
+public class VulkanWindowCreator implements WindowCreator<com.gracefulcode.opengine.v2.Window> {
 	/**
 	 * The Vulkan instance that we are using.
 	 */
@@ -45,7 +44,7 @@ public class VulkanWindowCreator implements WindowCreator<VulkanWindow> {
 	 * @param configuration The configuration for this window.
 	 * @return The initialized window.
 	 */
-	public VulkanWindow createWindow(Window.Configuration configuration) {
+	public Window createWindow(Window.Configuration configuration) {
 		glfwDefaultWindowHints();
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 		glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
@@ -70,7 +69,7 @@ public class VulkanWindowCreator implements WindowCreator<VulkanWindow> {
 
 		glfwShowWindow(id);
 
-		VulkanWindow vw = new VulkanWindow(this.vulkan, id, this.physicalDevices);
+		Window vw = new Window(id);
 		return vw;
 	}
 }

@@ -1,8 +1,8 @@
 package com.gracefulcode.opengine.vulkan;
 
 import static org.lwjgl.glfw.GLFWVulkan.*;
-import static org.lwjgl.vulkan.EXTDebugReport.*;
 import static org.lwjgl.system.MemoryUtil.*;
+import static org.lwjgl.vulkan.EXTDebugReport.*;
 import static org.lwjgl.vulkan.KHRDisplaySwapchain.*;
 import static org.lwjgl.vulkan.KHRSurface.*;
 import static org.lwjgl.vulkan.KHRSwapchain.*;
@@ -21,11 +21,11 @@ import java.nio.IntBuffer;
 import java.nio.LongBuffer;
 
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.TreeSet;
 
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.vulkan.VkDebugReportCallbackCreateInfoEXT;
-import org.lwjgl.vulkan.VkDebugReportCallbackEXT;
 import org.lwjgl.vulkan.VkDevice;
 import org.lwjgl.vulkan.VkLayerProperties;
 import org.lwjgl.vulkan.VkPhysicalDevice;
@@ -48,7 +48,6 @@ public class Vulkan {
 		public boolean validation = true;
 		public boolean needGraphics = true;
 		public boolean needCompute = false;
-		// public int debugFlags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT;
 	}
 
 	protected Vulkan.Configuration configuration;
@@ -83,65 +82,6 @@ public class Vulkan {
 		return this.instance;
 	}
 
-	// private final VkDebugReportCallbackEXT dbgFunc = VkDebugReportCallbackEXT.create(
- //        (flags, objectType, object, location, messageCode, pLayerPrefix, pMessage, pUserData) -> {
- //            String type;
- //            if ((flags & VK_DEBUG_REPORT_INFORMATION_BIT_EXT) != 0) {
- //                type = "INFORMATION";
- //            } else if ((flags & VK_DEBUG_REPORT_WARNING_BIT_EXT) != 0) {
- //                type = "WARNING";
- //            } else if ((flags & VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT) != 0) {
- //                type = "PERFORMANCE WARNING";
- //            } else if ((flags & VK_DEBUG_REPORT_ERROR_BIT_EXT) != 0) {
- //                type = "ERROR";
- //            } else if ((flags & VK_DEBUG_REPORT_DEBUG_BIT_EXT) != 0) {
- //                type = "DEBUG";
- //            } else {
- //                type = "UNKNOWN";
- //            }
-
- //            System.err.format(
- //                "%s: [%s] Code %d : %s\n",
- //                type, memASCII(pLayerPrefix), messageCode, VkDebugReportCallbackEXT.getString(pMessage)
- //            );
-
- //            /*
- //             * false indicates that layer should not bail-out of an
- //             * API call that had validation failures. This may mean that the
- //             * app dies inside the driver due to invalid parameter(s).
- //             * That's what would happen without validation layers, so we'll
- //             * keep that behavior here.
- //             */
- //            return VK_FALSE;
- //        }
- //    );
-
-	// protected void setupDebugging(VkInstanceCreateInfo createInfo) {
-	// 	int flags = this.configuration.debugFlags;
-
-	// 	VkDebugReportCallbackCreateInfoEXT dbgCreateInfo = VkDebugReportCallbackCreateInfoEXT.calloc()
-	// 		.sType(VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT) // <- the struct type
-	// 		.pNext(NULL) // <- must be NULL
-	// 		.pfnCallback(dbgFunc) // <- the actual function pointer (in LWJGL a Callback)
-	// 		.pUserData(NULL) // <- any user data provided to the debug report callback function
-	// 		.flags(flags); // <- indicates which kind of messages we want to receive
-
-	// 	// createInfo.pNext(dbgCreateInfo.address());
-	// 	// createInfo.pNext(NULL);
-
-	// 	LongBuffer pCallback = memAllocLong(1); // <- allocate a LongBuffer (for a non-dispatchable handle)
-	// 	// Actually create the debug report callback
-
-	// 	int err = vkCreateDebugReportCallbackEXT(this.instance, dbgCreateInfo, null, pCallback);
-	// 	this.callbackHandle = pCallback.get(0);
-	// 	System.out.println("Callback handle: " + this.callbackHandle);
-	// 	memFree(pCallback); // <- and free the LongBuffer
-	// 	dbgCreateInfo.free(); // <- and also the create-info struct
-	// 	if (err != VK_SUCCESS) {
-	// 		throw new AssertionError("Failed to create VkInstance: " + translateVulkanResult(err));
-	// 	}
-	// }
-
 	// public Shader createComputeShader(String fileName) throws FileNotFoundException, IOException {
 	// 	// Do we want to eventually have some sort of shader controller?
 	// 	Shader shader = new Shader(this.logicalDevice, "comp.spv", VK_SHADER_STAGE_COMPUTE_BIT);
@@ -166,39 +106,8 @@ public class Vulkan {
 
 	public void dispose() {
 		memFree(this.ib);
-		// vkDestroyDebugReportCallbackEXT(
-		// 	this.instance,
-		// 	this.callbackHandle,
-		// 	null
-		// );
 		this.instance.dispose();
 	}
-
-	// protected PointerBuffer getLayers() {
-	// 	PointerBuffer layers = memAllocPointer(this.configuration.desiredLayers.length);
-
-	// 	vkEnumerateInstanceLayerProperties(this.ib, null);
-	// 	int result = this.ib.get(0);
-
-	// 	VkLayerProperties.Buffer buffer = VkLayerProperties.calloc(result);
-	// 	vkEnumerateInstanceLayerProperties(this.ib, buffer);
-
-	// 	int limit = buffer.limit();
-	// 	for (int m = 0; m < limit; m++) {
-	// 		boolean found = false;
-	// 		for (int i = 0; i < this.configuration.desiredLayers.length; i++) {
-	// 			buffer.position(m);
-	// 			if (buffer.layerNameString().equals(this.configuration.desiredLayers[i])) {
-	// 				layers.put(memUTF8(this.configuration.desiredLayers[i]));
-	// 				found = true;
-	// 				break;					
-	// 			}
-	// 		}
-	// 	}
-	// 	layers.flip();
-
-	// 	return layers;
-	// }
 
 	public static String translatePresentMode(int presentMode) {
 		switch(presentMode) {

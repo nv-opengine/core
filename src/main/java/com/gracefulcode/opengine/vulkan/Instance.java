@@ -6,8 +6,8 @@ import static org.lwjgl.vulkan.EXTDebugReport.*;
 import static org.lwjgl.vulkan.KHRSwapchain.*;
 import static org.lwjgl.vulkan.VK10.*;
 
-import com.gracefulcode.opengine.v2.vulkan.PhysicalDevice;
 import com.gracefulcode.opengine.v2.vulkan.DefaultPhysicalDeviceSelector;
+import com.gracefulcode.opengine.v2.vulkan.PhysicalDevice;
 import com.gracefulcode.opengine.v2.PhysicalDeviceSelector;
 
 import java.nio.ByteBuffer;
@@ -114,6 +114,7 @@ public class Instance {
 	 * Create an Instance with a custom Configuration.
 	 */
 	public Instance(Configuration configuration) {
+		System.out.println("Instance");
 		this.configuration = configuration;
 		this.physicalDevices = new TreeSet<PhysicalDevice>(this.configuration.physicalDeviceSelector);
 
@@ -184,7 +185,7 @@ public class Instance {
 
 		for (int i = 0; i < numPhysicalDevices; i++) {
 			long physicalDeviceId = pPhysicalDevices.get(i);
-			PhysicalDevice physicalDevice = new PhysicalDevice(new VkPhysicalDevice(physicalDeviceId, this.instance));
+			PhysicalDevice physicalDevice = new PhysicalDevice(physicalDeviceId, this.instance);
 			this.physicalDevices.add(physicalDevice);
 		}
 		memFree(pPhysicalDevices);

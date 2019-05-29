@@ -1,0 +1,152 @@
+package com.gracefulcode.opengine.v2.vulkan.plugins;
+
+import static org.lwjgl.system.MemoryUtil.*;
+import static org.lwjgl.vulkan.EXTDebugReport.*;
+import static org.lwjgl.vulkan.VK10.*;
+
+import com.gracefulcode.opengine.v2.vulkan.ExtensionConfiguration;
+import com.gracefulcode.opengine.v2.vulkan.LayerConfiguration;
+import com.gracefulcode.opengine.v2.vulkan.Vulkan;
+
+// import java.nio.ByteBuffer;
+import java.nio.LongBuffer;
+
+import org.lwjgl.vulkan.VkDebugReportCallbackCreateInfoEXT;
+import org.lwjgl.vulkan.VkDebugReportCallbackEXT;
+import org.lwjgl.vulkan.VkInstance;
+import org.lwjgl.vulkan.VkInstanceCreateInfo;
+
+public class Debug implements Plugin {
+	protected long callbackHandle;
+	protected VkInstance vkInstance;
+
+	public Debug(Vulkan.Configuration configuration) {
+		this(configuration, false);
+	}
+
+	public Debug(Vulkan.Configuration configuration, boolean isRequired) {
+		configuration.extensionConfiguration.setExtension("VK_EXT_debug_report", isRequired ? ExtensionConfiguration.RequireType.REQUIRED : ExtensionConfiguration.RequireType.DESIRED);
+		configuration.layerConfiguration.setLayer("VK_LAYER_LUNARG_core_validation", LayerConfiguration.RequireType.REQUIRED);
+		configuration.plugins.add(this);
+	}
+
+	protected void info(int objectType, long object, long location, int messageCode, String pLayerString, String message, long pUserData) {
+		System.err.format(
+			"INFO: [%s] Code %d: %s\n",
+			pLayerString,
+			messageCode,
+			message
+		);
+	}
+
+	protected void warning(int objectType, long object, long location, int messageCode, String pLayerString, String message, long pUserData) {
+		System.err.format(
+			"WARNING: [%s] Code %d: %s\n",
+			pLayerString,
+			messageCode,
+			message
+		);
+	}
+
+	protected void performance(int objectType, long object, long location, int messageCode, String pLayerString, String message, long pUserData) {
+		System.err.format(
+			"PERFORMANCE: [%s] Code %d: %s\n",
+			pLayerString,
+			messageCode,
+			message
+		);
+	}
+
+	protected void error(int objectType, long object, long location, int messageCode, String pLayerString, String message, long pUserData) {
+		System.err.format(
+			"ERROR: [%s] Code %d: %s\n",
+			pLayerString,
+			messageCode,
+			message
+		);
+	}
+
+	protected void debug(int objectType, long object, long location, int messageCode, String pLayerString, String message, long pUserData) {
+		System.err.format(
+			"DEBUG: [%s] Code %d: %s\n",
+			pLayerString,
+			messageCode,
+			message
+		);
+	}
+
+	protected void unknown(int objectType, long object, long location, int messageCode, String pLayerString, String message, long pUserData) {
+		System.err.format(
+			"UNKNOWN: [%s] Code %d: %s\n",
+			pLayerString,
+			messageCode,
+			message
+		);
+	}
+
+	public void setupCreateInfo(VkInstanceCreateInfo instanceCreateInfo) {
+	}
+
+	public void postCreate(VkInstance instance) {
+		this.vkInstance = instance;
+		int flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_INFORMATION_BIT_EXT | VK_DEBUG_REPORT_DEBUG_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
+
+		VkDebugReportCallbackCreateInfoEXT createInfo = VkDebugReportCallbackCreateInfoEXT.calloc();
+		createInfo.sType(VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT);
+		createInfo.pNext(NULL);
+		createInfo.pfnCallback(dbgFunc);
+		createInfo.pUserData(NULL);
+		createInfo.flags(flags);
+
+		LongBuffer pCallback = memAllocLong(1);
+		int err = vkCreateDebugReportCallbackEXT(instance, createInfo, null, pCallback);
+		this.callbackHandle = pCallback.get(0);
+		memFree(pCallback);
+		createInfo.free();
+		if (err != VK_SUCCESS) {
+			throw new AssertionError("Failed to create debug callback: " + Vulkan.translateVulkanResult(err));
+		}
+	}
+
+	public void dispose() {
+		vkDestroyDebugReportCallbackEXT(
+			this.vkInstance,
+			this.callbackHandle,
+			null
+		);
+	}
+
+	private final VkDebugReportCallbackEXT dbgFunc = VkDebugReportCallbackEXT.create(
+		(flags, objectType, object, location, messageCode, pLayerPrefix, pMessage, pUserData) -> {
+			String layer = memASCII(pLayerPrefix);
+
+			if ((flags & VK_DEBUG_REPORT_INFORMATION_BIT_EXT) != 0) {
+				this.info(objectType, object, location, messageCode, layer, VkDebugReportCallbackEXT.getString(pMessage), pUserData);
+			} else if ((flags & VK_DEBUG_REPORT_WARNING_BIT_EXT) != 0) {
+				this.warning(objectType, object, location, messageCode, layer, VkDebugReportCallbackEXT.getString(pMessage), pUserData);
+			} else if ((flags & VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT) != 0) {
+				this.performance(objectType, object, location, messageCode, layer, VkDebugReportCallbackEXT.getString(pMessage), pUserData);
+			} else if ((flags & VK_DEBUG_REPORT_ERROR_BIT_EXT) != 0) {
+				this.error(objectType, object, location, messageCode, layer, VkDebugReportCallbackEXT.getString(pMessage), pUserData);
+			} else if ((flags & VK_DEBUG_REPORT_DEBUG_BIT_EXT) != 0) {
+				this.debug(objectType, object, location, messageCode, layer, VkDebugReportCallbackEXT.getString(pMessage), pUserData);
+			} else {
+				this.unknown(objectType, object, location, messageCode, layer, VkDebugReportCallbackEXT.getString(pMessage), pUserData);
+			}
+
+			// System.err.format(
+			// 	"%s: [%s] Code %d : %s\n",
+			// 	type, memASCII(pLayerPrefix), messageCode, VkDebugReportCallbackEXT.getString(pMessage)
+			// );
+
+			/*
+			 * false indicates that layer should not bail-out of an
+			 * API call that had validation failures. This may mean that the
+			 * app dies inside the driver due to invalid parameter(s).
+			 * That's what would happen without validation layers, so we'll
+			 * keep that behavior here.
+			 */
+			return VK_FALSE;
+		}
+	);
+}
