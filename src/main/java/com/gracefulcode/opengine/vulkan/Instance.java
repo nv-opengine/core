@@ -62,13 +62,6 @@ public class Instance {
 			// "VK_EXT_debug_utils"
 		};
 
-		/**
-		 * ExtensionPicker allows the application to decide what extensions to
-		 * enable. By default it's an instance of DefaultExtensionPicker, which
-		 * just enables them all.
-		 */
-		public ExtensionPicker extensionPicker = new DefaultExtensionPicker();
-
 		public PhysicalDeviceSelector physicalDeviceSelector = new DefaultPhysicalDeviceSelector();
 	}
 
