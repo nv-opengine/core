@@ -4,6 +4,7 @@ import static org.lwjgl.system.MemoryUtil.*;
 import static org.lwjgl.vulkan.VK10.*;
 
 import java.nio.IntBuffer;
+import java.util.ArrayList;
 
 import org.lwjgl.vulkan.VkInstance;
 import org.lwjgl.vulkan.VkPhysicalDevice;
@@ -20,6 +21,13 @@ import org.lwjgl.vulkan.VkQueueFamilyProperties;
  * @since 0.1
  */
 public class PhysicalDevice {
+	public static class Queue {
+		public int index;
+		public int count;
+		public int flags;
+		public int timestampValidBits;
+	}
+
 	/**
 	 * A reference to lwjgl's version of a physical device.
 	 */
@@ -32,6 +40,7 @@ public class PhysicalDevice {
 	protected VkPhysicalDeviceFeatures features;
 
 	protected VkPhysicalDeviceLimits limits;
+	protected ArrayList<Queue> queues = new ArrayList<Queue>();
 
 	public PhysicalDevice(long deviceId, VkInstance instance) {
 		this.vkPhysicalDevice = new VkPhysicalDevice(deviceId, instance);
@@ -70,12 +79,13 @@ public class PhysicalDevice {
 		int queueFamilyIndex;
 		for (queueFamilyIndex = 0; queueFamilyIndex < queueCount; queueFamilyIndex++) {
 			VkQueueFamilyProperties properties = queueProps.get(queueFamilyIndex);
-			System.out.println("    " + queueFamilyIndex + ":");
-			System.out.println("        Count: " + properties.queueCount());
-			System.out.println("        Flags: " + properties.queueFlags());
-			System.out.println("        Timestamp Valid Bits: " + properties.timestampValidBits());
+			Queue queue = new Queue();
+			queue.index = queueFamilyIndex;
+			queue.count = properties.queueCount();
+			queue.flags = properties.queueFlags();
+			queue.timestampValidBits = properties.timestampValidBits();
+			this.queues.add(queue);
 		}
-
 	}
 
 	public int deviceType() {
