@@ -33,30 +33,10 @@ import org.lwjgl.vulkan.VkSurfaceFormatKHR;
  * @since 0.1
  */
 public class VulkanPhysicalDevice {
-	protected HashMap<Long, PhysicalDeviceSurface> surfaceProperties = new HashMap<Long, PhysicalDeviceSurface>();
-	protected IntBuffer ib;
-	protected PointerBuffer pb;
 	protected VkPhysicalDevice device;
-	protected int graphicsQueueIndex = -1;
 
 	public VulkanPhysicalDevice(VkPhysicalDevice physicalDevice) {
-		this.ib = memAllocInt(1);
-		this.pb = memAllocPointer(1);
-
 		this.device = physicalDevice;
-
-		vkGetPhysicalDeviceQueueFamilyProperties(this.device, this.ib, null);
-		int queueCount = this.ib.get(0);
-
-		VkQueueFamilyProperties.Buffer queueProps = VkQueueFamilyProperties.calloc(queueCount);
-		vkGetPhysicalDeviceQueueFamilyProperties(this.device, this.ib, queueProps);
-
-		int queueFamilyIndex;
-		for (queueFamilyIndex = 0; queueFamilyIndex < queueCount; queueFamilyIndex++) {
-			VkQueueFamilyProperties properties = queueProps.get(queueFamilyIndex);
-		}
-
-		queueProps.free();
 	}
 
 	/*
@@ -82,10 +62,6 @@ public class VulkanPhysicalDevice {
 		return false;
 	}
 	*/
-
-	public PhysicalDeviceSurface getSurface(long surface) {
-		return this.surfaceProperties.get(surface);
-	}
 
 	public VulkanLogicalDevice createLogicalDevice(
 		String[] requiredExtensions2,
@@ -119,9 +95,9 @@ public class VulkanPhysicalDevice {
 			.ppEnabledExtensionNames(ppEnabledExtensionNames)
 			.ppEnabledLayerNames(null);
 
-		int err = vkCreateDevice(this.device, deviceCreateInfo, null, this.pb);
-		long device = this.pb.get(0);
-		// ppEnabledExtensionNames.free();
+		PointerBuffer pb = memAllocPointer(1);
+		int err = vkCreateDevice(this.device, deviceCreateInfo, null, pb);
+		long device = pb.get(0);
 
 		return new VulkanLogicalDevice(
 			this,
@@ -129,19 +105,6 @@ public class VulkanPhysicalDevice {
 		);
 	}
 
-	public int apiVersion() { return 0; }
-	public int deviceType() { return 0; }
-
-	public String toString() {
-		String ret = "PhysicalDevice<";
-		ret += ">";
-		return ret;
-	}
-
 	public void dispose() {
-		memFree(this.ib);
-		for (PhysicalDeviceSurface surface: this.surfaceProperties.values()) {
-			surface.dispose();
-		}
 	}
 }
