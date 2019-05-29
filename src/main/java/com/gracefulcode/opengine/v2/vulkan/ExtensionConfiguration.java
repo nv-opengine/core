@@ -51,10 +51,14 @@ public class ExtensionConfiguration {
 	}
 
 	public void setExtension(String extensionName, RequireType requireType) {
-		if (this.isLocked) throw new AssertionError("Trying to set extension after the configuration is locked.");
-
 		if (!this.extensions.containsKey(extensionName)) {
-			this.extensions.put(extensionName, requireType);
+			if (this.isLocked) {
+				if (requireType == RequireType.REQUIRED) {
+					throw new AssertionError("Extension " + extensionName + " is being marked as required, but is not supported.");
+				}
+			} else {
+				this.extensions.put(extensionName, requireType);
+			}
 			return;
 		}
 

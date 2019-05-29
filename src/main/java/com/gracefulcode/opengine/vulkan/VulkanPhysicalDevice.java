@@ -85,7 +85,7 @@ public class VulkanPhysicalDevice {
 		VkDeviceQueueCreateInfo.Buffer queueCreateInfo = VkDeviceQueueCreateInfo.calloc(1);
 		queueCreateInfo.position(0);
 		queueCreateInfo.sType(VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO);
-		queueCreateInfo.queueFamilyIndex(this.graphicsQueueIndex);
+		// queueCreateInfo.queueFamilyIndex(this.graphicsQueueIndex);
 		queueCreateInfo.pQueuePriorities(pQueuePriorities);
 
 		VkDeviceCreateInfo deviceCreateInfo = VkDeviceCreateInfo.calloc()

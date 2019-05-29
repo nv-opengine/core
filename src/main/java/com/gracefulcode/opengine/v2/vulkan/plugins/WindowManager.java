@@ -4,6 +4,7 @@ import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.glfw.GLFWVulkan.*;
 
 import com.gracefulcode.opengine.v2.vulkan.ExtensionConfiguration;
+import com.gracefulcode.opengine.v2.vulkan.LayerConfiguration;
 import com.gracefulcode.opengine.v2.vulkan.PhysicalDevice;
 import com.gracefulcode.opengine.v2.vulkan.Vulkan;
 import com.gracefulcode.opengine.v2.vulkan.Window;
@@ -31,16 +32,21 @@ public class WindowManager implements Plugin {
 			throw new AssertionError("GLFW Failed to initialize.");
 		}
 		
+		configuration.plugins.add(this);
+	}
+
+	public void setupExtensions(ExtensionConfiguration configuration) {
 		PointerBuffer requiredExtensions = glfwGetRequiredInstanceExtensions();
 		if (requiredExtensions == null) {
 			throw new AssertionError("Failed to find list of required Vulkan extensions");
 		}
 
 		for (int i = 0; i < requiredExtensions.limit(); i++) {
-			configuration.extensionConfiguration.setExtension(requiredExtensions.getStringUTF8(i), ExtensionConfiguration.RequireType.REQUIRED);
+			configuration.setExtension(requiredExtensions.getStringUTF8(i), ExtensionConfiguration.RequireType.REQUIRED);
 		}
+	}
 
-		configuration.plugins.add(this);
+	public void setupLayers(LayerConfiguration configuration) {
 	}
 
 	public boolean canUsePhysicalDevice(PhysicalDevice physicalDevice) {
@@ -105,7 +111,7 @@ public class WindowManager implements Plugin {
 
 	}
 
-	public void postCreate(VkInstance instance) {
+	public void postCreate(VkInstance instance, ExtensionConfiguration extensionConfiguration, LayerConfiguration LayerConfiguration) {
 		this.vkInstance = instance;
 	}
 

@@ -1,5 +1,7 @@
 package com.gracefulcode.opengine.v2.vulkan.plugins;
 
+import com.gracefulcode.opengine.v2.vulkan.ExtensionConfiguration;
+import com.gracefulcode.opengine.v2.vulkan.LayerConfiguration;
 import com.gracefulcode.opengine.v2.vulkan.PhysicalDevice;
 
 import org.lwjgl.vulkan.VkInstance;
@@ -21,11 +23,25 @@ public interface Plugin {
 	public void setupCreateInfo(VkInstanceCreateInfo createInfo);
 
 	/**
+	 * Set up the extensions that you desire/require. At this point we know
+	 * what extensions are supported and can throw errors if things aren't
+	 * possible.
+	 */
+	public void setupExtensions(ExtensionConfiguration configuration);
+
+	/**
+	 * Set up the layers that you desire/require. At this point we know
+	 * what layers are supported and can throw errors if things aren't
+	 * possible.
+	 */
+	public void setupLayers(LayerConfiguration configuration);
+
+	/**
 	 * Called after the VkInstance is created.
 	 *
 	 * @param instance The VkInstance that was just created.
 	 */
-	public void postCreate(VkInstance instance);
+	public void postCreate(VkInstance instance, ExtensionConfiguration extensionConfiguration, LayerConfiguration LayerConfiguration);
 
 	/**
 	 * Plugins can reject a physical device for any reason.

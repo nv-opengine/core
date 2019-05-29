@@ -29,15 +29,23 @@ import org.lwjgl.vulkan.VkInstanceCreateInfo;
 public class Debug implements Plugin {
 	protected long callbackHandle;
 	protected VkInstance vkInstance;
+	protected boolean isRequired;
 
 	public Debug(Vulkan.Configuration configuration) {
 		this(configuration, false);
 	}
 
 	public Debug(Vulkan.Configuration configuration, boolean isRequired) {
-		configuration.extensionConfiguration.setExtension("VK_EXT_debug_report", isRequired ? ExtensionConfiguration.RequireType.REQUIRED : ExtensionConfiguration.RequireType.DESIRED);
-		configuration.layerConfiguration.setLayer("VK_LAYER_LUNARG_core_validation", LayerConfiguration.RequireType.REQUIRED);
 		configuration.plugins.add(this);
+		this.isRequired = isRequired;
+	}
+
+	public void setupExtensions(ExtensionConfiguration configuration) {
+		configuration.setExtension("VK_EXT_debug_report", this.isRequired ? ExtensionConfiguration.RequireType.REQUIRED : ExtensionConfiguration.RequireType.DESIRED);
+	}
+
+	public void setupLayers(LayerConfiguration configuration) {
+		configuration.setLayer("VK_LAYER_LUNARG_core_validation", LayerConfiguration.RequireType.REQUIRED);
 	}
 
 	public boolean canUsePhysicalDevice(PhysicalDevice physicalDevice) {
@@ -101,7 +109,9 @@ public class Debug implements Plugin {
 	public void setupCreateInfo(VkInstanceCreateInfo instanceCreateInfo) {
 	}
 
-	public void postCreate(VkInstance instance) {
+	public void postCreate(VkInstance instance, ExtensionConfiguration extensionConfiguration, LayerConfiguration LayerConfiguration) {
+		if (!extensionConfiguration.shouldHave("VK_EXT_debug_report")) return;
+
 		this.vkInstance = instance;
 		int flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_INFORMATION_BIT_EXT | VK_DEBUG_REPORT_DEBUG_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
 
@@ -123,6 +133,8 @@ public class Debug implements Plugin {
 	}
 
 	public void dispose() {
+		if (this.vkInstance == null) return;
+		
 		vkDestroyDebugReportCallbackEXT(
 			this.vkInstance,
 			this.callbackHandle,

@@ -170,6 +170,20 @@ public class Vulkan {
 			plugin.setupCreateInfo(createInfo);
 		}
 
+		IntBuffer ib = memAllocInt(1);
+		vkEnumerateInstanceExtensionProperties((CharSequence)null, ib, null);
+		VkExtensionProperties.Buffer extensionProperties = VkExtensionProperties.calloc(ib.get(0));
+		vkEnumerateInstanceExtensionProperties((CharSequence)null, ib, extensionProperties);
+		for (int i = 0; i < extensionProperties.limit(); i++) {
+			extensionProperties.position(i);
+			this.configuration.extensionConfiguration.setExtension(extensionProperties.extensionNameString(), ExtensionConfiguration.RequireType.DONT_CARE);
+		}
+		this.configuration.extensionConfiguration.lock();
+
+		for (Plugin plugin: this.configuration.plugins) {
+			plugin.setupExtensions(this.configuration.extensionConfiguration);
+		}
+
 		PointerBuffer configuredExtensions = this.configuration.extensionConfiguration.getConfiguredExtensions();
 		createInfo.ppEnabledExtensionNames(configuredExtensions);
 
@@ -194,13 +208,13 @@ public class Vulkan {
 		 * Call the plugins after creation.
 		 */
 		for (Plugin plugin: this.configuration.plugins) {
-			plugin.postCreate(this.vkInstance);
+			plugin.postCreate(this.vkInstance, this.configuration.extensionConfiguration, this.configuration.layerConfiguration);
 		}
 
 		/**
 		 * Get the physical devices that we have access to.
 		 */
-		IntBuffer ib = memAllocInt(1);
+		ib = memAllocInt(1);
 		err = vkEnumeratePhysicalDevices(this.vkInstance, ib, null);
 		if (err != VK_SUCCESS) {
 			throw new AssertionError("Failed to get number of physical devices: " + Vulkan.translateVulkanResult(err));
