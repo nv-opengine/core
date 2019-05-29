@@ -6,6 +6,7 @@ import static org.lwjgl.vulkan.VK10.*;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 
+import org.lwjgl.vulkan.VkExtent3D;
 import org.lwjgl.vulkan.VkInstance;
 import org.lwjgl.vulkan.VkPhysicalDevice;
 import org.lwjgl.vulkan.VkPhysicalDeviceFeatures;
@@ -26,6 +27,7 @@ public class PhysicalDevice {
 		public int count;
 		public int flags;
 		public int timestampValidBits;
+		public VkExtent3D minImageTransferGranularity;
 	}
 
 	/**
@@ -84,6 +86,7 @@ public class PhysicalDevice {
 			queue.count = properties.queueCount();
 			queue.flags = properties.queueFlags();
 			queue.timestampValidBits = properties.timestampValidBits();
+			queue.minImageTransferGranularity = properties.minImageTransferGranularity();
 			this.queues.add(queue);
 		}
 	}

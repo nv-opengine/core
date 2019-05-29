@@ -16,7 +16,6 @@ import org.lwjgl.PointerBuffer;
 import org.lwjgl.vulkan.VkDevice;
 import org.lwjgl.vulkan.VkDeviceCreateInfo;
 import org.lwjgl.vulkan.VkDeviceQueueCreateInfo;
-import org.lwjgl.vulkan.VkExtent3D;
 import org.lwjgl.vulkan.VkPhysicalDevice;
 import org.lwjgl.vulkan.VkPhysicalDeviceLimits;
 import org.lwjgl.vulkan.VkPhysicalDeviceProperties;
@@ -34,23 +33,7 @@ import org.lwjgl.vulkan.VkSurfaceFormatKHR;
  * @since 0.1
  */
 public class VulkanPhysicalDevice {
-	/**
-	 * Queues that are available for this Physical Device.
-	 *
-	 * @author Daniel Grace <dgrace@gracefulcode.com>
-	 * @version 0.1
-	 * @since 0.1
-	 */
-	public static class QueueFamilyProperties {
-		public int index;
-		public VkExtent3D minImageTransferGranularity;
-		public int queueCount;
-		public int queueFlags;
-		public int timestampValidBits;
-	}
-
 	protected HashMap<Long, PhysicalDeviceSurface> surfaceProperties = new HashMap<Long, PhysicalDeviceSurface>();
-	protected ArrayList<QueueFamilyProperties> queueFamilyProperties = new ArrayList<QueueFamilyProperties>();
 	protected IntBuffer ib;
 	protected PointerBuffer pb;
 	protected VkPhysicalDevice device;
@@ -71,18 +54,6 @@ public class VulkanPhysicalDevice {
 		int queueFamilyIndex;
 		for (queueFamilyIndex = 0; queueFamilyIndex < queueCount; queueFamilyIndex++) {
 			VkQueueFamilyProperties properties = queueProps.get(queueFamilyIndex);
-
-			QueueFamilyProperties qfp = new QueueFamilyProperties();
-			qfp.index = queueFamilyIndex;
-			qfp.minImageTransferGranularity = properties.minImageTransferGranularity();
-			qfp.queueCount = properties.queueCount();
-			qfp.queueFlags = properties.queueFlags();
-			qfp.timestampValidBits = properties.timestampValidBits();
-
-			if ((this.graphicsQueueIndex == -1) && ((qfp.queueFlags & VK_QUEUE_GRAPHICS_BIT) > 0)) {
-				this.graphicsQueueIndex = queueFamilyIndex;
-			}
-			this.queueFamilyProperties.add(qfp);
 		}
 
 		queueProps.free();
