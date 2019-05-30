@@ -10,7 +10,6 @@ import static org.lwjgl.vulkan.VK10.*;
 
 import com.gracefulcode.opengine.v2.vulkan.PhysicalDevice;
 import com.gracefulcode.opengine.v2.vulkan.VulkanWindowCreator;
-import com.gracefulcode.opengine.Window;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -57,8 +56,6 @@ public class Vulkan {
 
 	// Reuse this int buffer for many method calls.
 	protected IntBuffer ib = memAllocInt(1);
-
-	protected ArrayList<VulkanWindow> windows = new ArrayList<VulkanWindow>();
 
 	public Vulkan() {
 		this(new Vulkan.Configuration());
