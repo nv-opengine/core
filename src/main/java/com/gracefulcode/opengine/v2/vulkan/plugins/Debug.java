@@ -31,12 +31,7 @@ public class Debug implements Plugin {
 	protected VkInstance vkInstance;
 	protected boolean isRequired;
 
-	public Debug(Vulkan.Configuration configuration) {
-		this(configuration, false);
-	}
-
-	public Debug(Vulkan.Configuration configuration, boolean isRequired) {
-		configuration.plugins.add(this);
+	public Debug(boolean isRequired) {
 		this.isRequired = isRequired;
 	}
 

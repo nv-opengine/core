@@ -76,7 +76,6 @@ public class Vulkan {
 
 		public ExtensionConfiguration extensionConfiguration = new ExtensionConfiguration();
 		public LayerConfiguration layerConfiguration = new LayerConfiguration();
-		public ArrayList<Plugin> plugins = new ArrayList<Plugin>();
 		public PhysicalDeviceSelector<PhysicalDevice> physicalDeviceSelector = new DefaultPhysicalDeviceSelector();
 	}
 
@@ -92,6 +91,12 @@ public class Vulkan {
 	 * only instance.
 	 */
 	protected static Vulkan instance;
+
+	protected static ArrayList<Plugin> plugins = new ArrayList<Plugin>();
+
+	public static void addPlugin(Plugin plugin) {
+		Vulkan.plugins.add(plugin);
+	}
 
 	/**
 	 * Initialize the vulkan singleton.
@@ -176,7 +181,7 @@ public class Vulkan {
 		 * Allow plugins to modify this. I think there's some advanced way
 		 * that I can do debugging that uses this. Right now nothing uses it.
 		 */
-		for (Plugin plugin: this.configuration.plugins) {
+		for (Plugin plugin: Vulkan.plugins) {
 			plugin.setupCreateInfo(createInfo);
 		}
 
@@ -190,7 +195,7 @@ public class Vulkan {
 		}
 		this.configuration.extensionConfiguration.lock();
 
-		for (Plugin plugin: this.configuration.plugins) {
+		for (Plugin plugin: Vulkan.plugins) {
 			plugin.setupExtensions(this.configuration.extensionConfiguration);
 		}
 
@@ -217,7 +222,7 @@ public class Vulkan {
 		/**
 		 * Call the plugins after creation.
 		 */
-		for (Plugin plugin: this.configuration.plugins) {
+		for (Plugin plugin: Vulkan.plugins) {
 			plugin.postCreate(this, this.vkInstance, this.configuration.extensionConfiguration, this.configuration.layerConfiguration);
 		}
 
@@ -248,7 +253,7 @@ public class Vulkan {
 			PhysicalDevice physicalDevice = new PhysicalDevice(physicalDeviceId, this.vkInstance);
 
 			boolean passedCheck = true;
-			for (Plugin plugin: this.configuration.plugins) {
+			for (Plugin plugin: Vulkan.plugins) {
 				if (!plugin.canUsePhysicalDevice(physicalDevice)) {
 					passedCheck = false;
 					break;
@@ -271,7 +276,7 @@ public class Vulkan {
 	}
 
 	public void dispose() {
-		for (Plugin plugin: this.configuration.plugins) {
+		for (Plugin plugin: Vulkan.plugins) {
 			plugin.dispose();
 		}
 		vkDestroyInstance(this.vkInstance, null);

@@ -18,8 +18,10 @@ public class WindowedApp {
 		 * WindowManager lets us create windows. Opengine lets use do
 		 * compute-only applications, so the window manager is a plugin.
 		 */
-		Debug debugPlugin = new Debug(vulkanConfiguration);
-		WindowManager windowManager = new WindowManager(vulkanConfiguration);
+		Vulkan.addPlugin(new Debug(false));
+
+		WindowManager windowManager = new WindowManager();
+		Vulkan.addPlugin(windowManager);
 
 		/**
 		 * Create our Vulkan instance. We have to do this after we register the

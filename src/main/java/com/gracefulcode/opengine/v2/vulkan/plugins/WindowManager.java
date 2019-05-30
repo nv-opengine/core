@@ -231,17 +231,16 @@ public class WindowManager implements Plugin {
 	protected Vulkan vulkan;
 	protected Configuration configuration;
 
-	public WindowManager(Vulkan.Configuration configuration) {
-		this(configuration, new Configuration());
+	public WindowManager() {
+		this(new Configuration());
 	}
 
-	public WindowManager(Vulkan.Configuration configuration, Configuration myConfiguration) {
+	public WindowManager(Configuration configuration) {
 		if (!glfwInit()) {
 			throw new AssertionError("GLFW Failed to initialize.");
 		}
 		
-		configuration.plugins.add(this);
-		this.configuration = myConfiguration;
+		this.configuration = configuration;
 	}
 
 	@Override
