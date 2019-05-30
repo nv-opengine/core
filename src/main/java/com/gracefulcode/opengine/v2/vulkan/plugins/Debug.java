@@ -109,7 +109,7 @@ public class Debug implements Plugin {
 	public void setupCreateInfo(VkInstanceCreateInfo instanceCreateInfo) {
 	}
 
-	public void postCreate(VkInstance instance, ExtensionConfiguration extensionConfiguration, LayerConfiguration LayerConfiguration) {
+	public void postCreate(Vulkan vulkan, VkInstance instance, ExtensionConfiguration extensionConfiguration, LayerConfiguration LayerConfiguration) {
 		if (!extensionConfiguration.shouldHave("VK_EXT_debug_report")) return;
 
 		this.vkInstance = instance;

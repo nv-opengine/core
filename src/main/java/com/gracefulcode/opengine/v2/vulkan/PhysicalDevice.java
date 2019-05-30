@@ -28,6 +28,10 @@ public class PhysicalDevice {
 		public int flags;
 		public int timestampValidBits;
 		public VkExtent3D minImageTransferGranularity;
+
+		public String toString() {
+			return "Queue[index:" + this.index + ", count:" + this.count + ", flags: " + this.flags + "]";
+		}
 	}
 
 	/**
@@ -89,6 +93,18 @@ public class PhysicalDevice {
 			queue.minImageTransferGranularity = properties.minImageTransferGranularity();
 			this.queues.add(queue);
 		}
+	}
+
+	public String toString() {
+		return this.properties.deviceNameString();
+	}
+
+	public ArrayList<Queue> getQueues() {
+		return this.queues;
+	}
+
+	public VkPhysicalDevice getPhysicalDevice() {
+		return this.vkPhysicalDevice;
 	}
 
 	public int deviceType() {

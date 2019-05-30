@@ -3,17 +3,18 @@ package com.gracefulcode.opengine.v2.vulkan;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.glfw.GLFWVulkan.*;
 import static org.lwjgl.system.MemoryUtil.*;
-import static org.lwjgl.vulkan.VK10.*;
 import static org.lwjgl.vulkan.EXTDebugReport.*;
 import static org.lwjgl.vulkan.KHRDisplaySwapchain.*;
 import static org.lwjgl.vulkan.KHRSurface.*;
 import static org.lwjgl.vulkan.KHRSwapchain.*;
+import static org.lwjgl.vulkan.VK10.*;
 
 import com.gracefulcode.opengine.v2.vulkan.plugins.Plugin;
 
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -217,7 +218,7 @@ public class Vulkan {
 		 * Call the plugins after creation.
 		 */
 		for (Plugin plugin: this.configuration.plugins) {
-			plugin.postCreate(this.vkInstance, this.configuration.extensionConfiguration, this.configuration.layerConfiguration);
+			plugin.postCreate(this, this.vkInstance, this.configuration.extensionConfiguration, this.configuration.layerConfiguration);
 		}
 
 		memFree(ib);
@@ -259,6 +260,10 @@ public class Vulkan {
 		}
 
 		memFree(pPhysicalDevices);
+	}
+
+	public Collection<PhysicalDevice> getPhysicalDevices() {
+		return this.physicalDevices;
 	}
 
 	public VkInstance getVkInstance() {
