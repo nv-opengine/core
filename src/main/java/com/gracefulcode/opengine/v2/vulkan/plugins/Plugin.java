@@ -2,7 +2,6 @@ package com.gracefulcode.opengine.v2.vulkan.plugins;
 
 import com.gracefulcode.opengine.v2.vulkan.ExtensionConfiguration;
 import com.gracefulcode.opengine.v2.vulkan.LayerConfiguration;
-import com.gracefulcode.opengine.v2.vulkan.PhysicalDevice;
 import com.gracefulcode.opengine.v2.vulkan.Vulkan;
 
 import org.lwjgl.vulkan.VkInstance;
@@ -49,14 +48,6 @@ public interface Plugin {
 	 * @param layerConfiguration The list of layers that were created.
 	 */
 	public void postCreate(Vulkan vulkan, VkInstance instance, ExtensionConfiguration extensionConfiguration, LayerConfiguration LayerConfiguration);
-
-	/**
-	 * Plugins can reject a physical device for any reason.
-	 *
-	 * @param physicalDevice The physical device under test.
-	 * @return True if this plugin can use this physical device, otherwise false.
-	 */
-	public boolean canUsePhysicalDevice(PhysicalDevice physicalDevice);
 
 	/**
 	 * Called during teardown. Clean up your stuff.

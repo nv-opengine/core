@@ -43,10 +43,6 @@ public class Debug implements Plugin {
 		configuration.setLayer("VK_LAYER_LUNARG_core_validation", LayerConfiguration.RequireType.REQUIRED);
 	}
 
-	public boolean canUsePhysicalDevice(PhysicalDevice physicalDevice) {
-		return true;
-	}
-
 	protected void info(int objectType, long object, long location, int messageCode, String pLayerString, String message, long pUserData) {
 		System.err.format(
 			"INFO: [%s] Code %d: %s\n",

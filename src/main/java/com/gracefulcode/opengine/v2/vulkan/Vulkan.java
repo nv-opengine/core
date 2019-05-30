@@ -9,6 +9,7 @@ import static org.lwjgl.vulkan.KHRSurface.*;
 import static org.lwjgl.vulkan.KHRSwapchain.*;
 import static org.lwjgl.vulkan.VK10.*;
 
+import com.gracefulcode.opengine.v2.vulkan.plugins.interfaces.FiltersPhysicalDevices;
 import com.gracefulcode.opengine.v2.vulkan.plugins.Plugin;
 
 import java.nio.ByteBuffer;
@@ -93,9 +94,13 @@ public class Vulkan {
 	protected static Vulkan instance;
 
 	protected static ArrayList<Plugin> plugins = new ArrayList<Plugin>();
+	protected static ArrayList<FiltersPhysicalDevices> filtersPhysicalDevices = new ArrayList<FiltersPhysicalDevices>();
 
 	public static void addPlugin(Plugin plugin) {
 		Vulkan.plugins.add(plugin);
+		if (plugin instanceof FiltersPhysicalDevices) {
+			Vulkan.filtersPhysicalDevices.add((FiltersPhysicalDevices)plugin);
+		}
 	}
 
 	/**
@@ -253,8 +258,8 @@ public class Vulkan {
 			PhysicalDevice physicalDevice = new PhysicalDevice(physicalDeviceId, this.vkInstance);
 
 			boolean passedCheck = true;
-			for (Plugin plugin: Vulkan.plugins) {
-				if (!plugin.canUsePhysicalDevice(physicalDevice)) {
+			for (FiltersPhysicalDevices filter: Vulkan.filtersPhysicalDevices) {
+				if (!filter.canUsePhysicalDevice(physicalDevice)) {
 					passedCheck = false;
 					break;
 				}

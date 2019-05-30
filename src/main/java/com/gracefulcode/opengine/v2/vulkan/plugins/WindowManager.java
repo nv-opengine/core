@@ -9,6 +9,7 @@ import static org.lwjgl.vulkan.VK10.*;
 import com.gracefulcode.opengine.v2.vulkan.ExtensionConfiguration;
 import com.gracefulcode.opengine.v2.vulkan.LayerConfiguration;
 import com.gracefulcode.opengine.v2.vulkan.PhysicalDevice;
+import com.gracefulcode.opengine.v2.vulkan.plugins.interfaces.FiltersPhysicalDevices;
 import com.gracefulcode.opengine.v2.vulkan.Vulkan;
 import com.gracefulcode.opengine.v2.vulkan.Window;
 
@@ -33,7 +34,7 @@ import org.lwjgl.vulkan.VkSurfaceFormatKHR;
  * @version 0.1.1
  * @since 0.1.1
  */
-public class WindowManager implements Plugin {
+public class WindowManager implements Plugin, FiltersPhysicalDevices {
 	public static class ColorSpace {
 		protected int colorSpace;
 
@@ -184,10 +185,6 @@ public class WindowManager implements Plugin {
 			comparison = Integer.compare(b.format.bitsPerChannel(), a.format.bitsPerChannel());
 			if (comparison != 0) return comparison;
 
-
-
-
-
 			comparison = Integer.compare(b.hashCode(), a.hashCode());
 			if (comparison != 0) return comparison;
 
@@ -259,6 +256,7 @@ public class WindowManager implements Plugin {
 	public void setupLayers(LayerConfiguration configuration) {
 	}
 
+	@Override
 	public boolean canUsePhysicalDevice(PhysicalDevice physicalDevice) {
 		return true;
 	}
