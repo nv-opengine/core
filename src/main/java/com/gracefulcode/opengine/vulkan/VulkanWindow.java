@@ -57,17 +57,6 @@ public class VulkanWindow implements Window {
 	protected SwapChain activeSwapChain;
 
 	/**
-	 * We have one swapchain per window.
-	 */
-	// protected SwapChain swapChain;
-	// protected Pipeline pipeline;
-	// protected RenderPass renderPass;
-
-	protected String[] requiredExtensions = {
-		VK_KHR_SWAPCHAIN_EXTENSION_NAME
-	};
-
-	/**
 	 * The physical device backing this window.
 	 */
 	protected VulkanPhysicalDevice physicalDevice;

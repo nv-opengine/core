@@ -76,7 +76,7 @@ public class Vulkan {
 		public ExtensionConfiguration extensionConfiguration = new ExtensionConfiguration();
 		public LayerConfiguration layerConfiguration = new LayerConfiguration();
 		public ArrayList<Plugin> plugins = new ArrayList<Plugin>();
-		public PhysicalDeviceSelector physicalDeviceSelector = new DefaultPhysicalDeviceSelector();
+		public PhysicalDeviceSelector<PhysicalDevice> physicalDeviceSelector = new DefaultPhysicalDeviceSelector();
 	}
 
 	/**
@@ -140,6 +140,15 @@ public class Vulkan {
 		this.configuration = configuration;
 		this.physicalDevices = new TreeSet<PhysicalDevice>(this.configuration.physicalDeviceSelector);
 
+		this.createInstance();
+		this.setupPhysicalDevices();
+
+		if (this.physicalDevices.size() == 0) {
+			throw new AssertionError("No suitable physical devices found.");
+		}
+	}
+
+	protected void createInstance() {
 		/**
 		 * appInfo is basic information about the application itself. There
 		 * isn't anything super important here, though we do let Vulkan know
@@ -211,11 +220,15 @@ public class Vulkan {
 			plugin.postCreate(this.vkInstance, this.configuration.extensionConfiguration, this.configuration.layerConfiguration);
 		}
 
+		memFree(ib);
+	}
+
+	protected void setupPhysicalDevices() {
 		/**
 		 * Get the physical devices that we have access to.
 		 */
-		ib = memAllocInt(1);
-		err = vkEnumeratePhysicalDevices(this.vkInstance, ib, null);
+		IntBuffer ib = memAllocInt(1);
+		int err = vkEnumeratePhysicalDevices(this.vkInstance, ib, null);
 		if (err != VK_SUCCESS) {
 			throw new AssertionError("Failed to get number of physical devices: " + Vulkan.translateVulkanResult(err));
 		}

@@ -244,7 +244,7 @@ public class MemoryManager {
 	}
 
 	protected ArrayList<Buffer> buffers = new ArrayList<Buffer>();
-	protected ArrayList<Image> images = new ArrayList<Image>();
+	// protected ArrayList<Image> images = new ArrayList<Image>();
 	protected VkDevice logicalDevice;
 
 	MemoryManager(VkDevice logicalDevice) {
