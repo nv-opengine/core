@@ -242,6 +242,31 @@ public class WindowManager implements Plugin, FiltersPhysicalDevices, NeedsQueue
 	}
 
 	@Override
+	public boolean graphicsPresentationMustMatch() {
+		return true;
+	}
+
+	@Override
+	public boolean computeGraphicsMustMatch() {
+		return false;
+	}
+
+	@Override
+	public int numComputeQueues() {
+		return 0;
+	}
+
+	@Override
+	public int numPresentationQueues() {
+		return 1;
+	}
+
+	@Override
+	public int numGraphicsQueues() {
+		return 1;
+	}
+
+	@Override
 	public void setupExtensions(ExtensionConfiguration configuration) {
 		PointerBuffer requiredExtensions = glfwGetRequiredInstanceExtensions();
 		if (requiredExtensions == null) {
