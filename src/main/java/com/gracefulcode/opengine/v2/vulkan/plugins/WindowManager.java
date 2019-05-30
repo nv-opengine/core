@@ -10,6 +10,7 @@ import com.gracefulcode.opengine.v2.vulkan.ExtensionConfiguration;
 import com.gracefulcode.opengine.v2.vulkan.LayerConfiguration;
 import com.gracefulcode.opengine.v2.vulkan.PhysicalDevice;
 import com.gracefulcode.opengine.v2.vulkan.plugins.interfaces.FiltersPhysicalDevices;
+import com.gracefulcode.opengine.v2.vulkan.plugins.interfaces.NeedsQueues;
 import com.gracefulcode.opengine.v2.vulkan.Vulkan;
 import com.gracefulcode.opengine.v2.vulkan.Window;
 
@@ -34,7 +35,7 @@ import org.lwjgl.vulkan.VkSurfaceFormatKHR;
  * @version 0.1.1
  * @since 0.1.1
  */
-public class WindowManager implements Plugin, FiltersPhysicalDevices {
+public class WindowManager implements Plugin, FiltersPhysicalDevices, NeedsQueues {
 	public static class ColorSpace {
 		protected int colorSpace;
 

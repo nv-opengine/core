@@ -4,7 +4,6 @@ import static org.lwjgl.glfw.GLFW.*;
 
 import com.gracefulcode.opengine.vulkan.Vulkan;
 import com.gracefulcode.opengine.vulkan.MemoryManager;
-import com.gracefulcode.opengine.vulkan.Shader;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
