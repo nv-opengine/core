@@ -1,4 +1,4 @@
-package com.gracefulcode.opengine.v2.vulkan;
+package com.gracefulcode.opengine.vulkan;
 
 import java.util.Comparator;
 

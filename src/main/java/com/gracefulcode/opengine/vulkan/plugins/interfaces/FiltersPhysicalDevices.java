@@ -1,6 +1,6 @@
-package com.gracefulcode.opengine.v2.vulkan.plugins.interfaces;
+package com.gracefulcode.opengine.vulkan.plugins.interfaces;
 
-import com.gracefulcode.opengine.v2.vulkan.PhysicalDevice;
+import com.gracefulcode.opengine.vulkan.PhysicalDevice;
 
 public interface FiltersPhysicalDevices {
 	/**

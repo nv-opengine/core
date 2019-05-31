@@ -1,8 +1,8 @@
-package com.gracefulcode.opengine.v2.vulkan.plugins;
+package com.gracefulcode.opengine.vulkan.plugins;
 
-import com.gracefulcode.opengine.v2.vulkan.ExtensionConfiguration;
-import com.gracefulcode.opengine.v2.vulkan.LayerConfiguration;
-import com.gracefulcode.opengine.v2.vulkan.Vulkan;
+import com.gracefulcode.opengine.vulkan.ExtensionConfiguration;
+import com.gracefulcode.opengine.vulkan.LayerConfiguration;
+import com.gracefulcode.opengine.vulkan.Vulkan;
 
 import org.lwjgl.vulkan.VkInstance;
 import org.lwjgl.vulkan.VkInstanceCreateInfo;

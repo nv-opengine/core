@@ -1,4 +1,4 @@
-package com.gracefulcode.opengine.v2.vulkan.plugins;
+package com.gracefulcode.opengine.vulkan.plugins;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.glfw.GLFWVulkan.*;
@@ -6,13 +6,13 @@ import static org.lwjgl.system.MemoryUtil.*;
 import static org.lwjgl.vulkan.KHRSurface.*;
 import static org.lwjgl.vulkan.VK10.*;
 
-import com.gracefulcode.opengine.v2.vulkan.ExtensionConfiguration;
-import com.gracefulcode.opengine.v2.vulkan.LayerConfiguration;
-import com.gracefulcode.opengine.v2.vulkan.PhysicalDevice;
-import com.gracefulcode.opengine.v2.vulkan.plugins.interfaces.FiltersPhysicalDevices;
-import com.gracefulcode.opengine.v2.vulkan.plugins.interfaces.NeedsQueues;
-import com.gracefulcode.opengine.v2.vulkan.Vulkan;
-import com.gracefulcode.opengine.v2.vulkan.Window;
+import com.gracefulcode.opengine.vulkan.ExtensionConfiguration;
+import com.gracefulcode.opengine.vulkan.LayerConfiguration;
+import com.gracefulcode.opengine.vulkan.PhysicalDevice;
+import com.gracefulcode.opengine.vulkan.plugins.interfaces.FiltersPhysicalDevices;
+import com.gracefulcode.opengine.vulkan.plugins.interfaces.NeedsQueues;
+import com.gracefulcode.opengine.vulkan.Vulkan;
+import com.gracefulcode.opengine.vulkan.Window;
 
 import java.nio.IntBuffer;
 import java.nio.LongBuffer;

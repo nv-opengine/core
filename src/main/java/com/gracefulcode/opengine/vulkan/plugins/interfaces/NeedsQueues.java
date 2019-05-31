@@ -1,4 +1,4 @@
-package com.gracefulcode.opengine.v2.vulkan.plugins.interfaces;
+package com.gracefulcode.opengine.vulkan.plugins.interfaces;
 
 public interface NeedsQueues {
 	public int numGraphicsQueues();

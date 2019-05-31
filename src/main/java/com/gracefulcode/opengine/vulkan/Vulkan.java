@@ -1,4 +1,4 @@
-package com.gracefulcode.opengine.v2.vulkan;
+package com.gracefulcode.opengine.vulkan;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.glfw.GLFWVulkan.*;
@@ -9,8 +9,8 @@ import static org.lwjgl.vulkan.KHRSurface.*;
 import static org.lwjgl.vulkan.KHRSwapchain.*;
 import static org.lwjgl.vulkan.VK10.*;
 
-import com.gracefulcode.opengine.v2.vulkan.plugins.interfaces.FiltersPhysicalDevices;
-import com.gracefulcode.opengine.v2.vulkan.plugins.Plugin;
+import com.gracefulcode.opengine.vulkan.plugins.interfaces.FiltersPhysicalDevices;
+import com.gracefulcode.opengine.vulkan.plugins.Plugin;
 
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;

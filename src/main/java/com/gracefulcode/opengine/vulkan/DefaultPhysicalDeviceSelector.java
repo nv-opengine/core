@@ -1,4 +1,4 @@
-package com.gracefulcode.opengine.v2.vulkan;
+package com.gracefulcode.opengine.vulkan;
 
 /**
  * The default physical device selector should work well for graphics or

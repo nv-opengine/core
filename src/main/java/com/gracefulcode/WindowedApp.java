@@ -1,9 +1,9 @@
 package com.gracefulcode;
 
-import com.gracefulcode.opengine.v2.Window;
-import com.gracefulcode.opengine.v2.vulkan.plugins.Debug;
-import com.gracefulcode.opengine.v2.vulkan.plugins.WindowManager;
-import com.gracefulcode.opengine.v2.vulkan.Vulkan;
+import com.gracefulcode.opengine.Window;
+import com.gracefulcode.opengine.vulkan.plugins.Debug;
+import com.gracefulcode.opengine.vulkan.plugins.WindowManager;
+import com.gracefulcode.opengine.vulkan.Vulkan;
 
 public class WindowedApp {
 	public static void main(String[] args) {
