@@ -2,7 +2,7 @@ package com.gracefulcode;
 
 import static org.lwjgl.glfw.GLFW.*;
 
-import com.gracefulcode.opengine.vulkan.Vulkan;
+import com.gracefulcode.opengine.v2.vulkan.Vulkan;
 import com.gracefulcode.opengine.vulkan.MemoryManager;
 
 import java.io.FileNotFoundException;

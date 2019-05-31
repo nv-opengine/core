@@ -206,7 +206,7 @@ public interface Window {
 		 * What color the framebuffer is automatically cleared to. Yes, it has
 		 * alpha.
 		 */
-		public Color4 clearColor;
+		public float[] clearColor;
 
 		/**
 		 * The buffer type that this window uses. Cannot change after the fact.
