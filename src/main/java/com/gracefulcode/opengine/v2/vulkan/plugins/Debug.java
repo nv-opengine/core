@@ -31,12 +31,7 @@ public class Debug implements Plugin {
 	protected VkInstance vkInstance;
 	protected boolean isRequired;
 
-	public Debug(Vulkan.Configuration configuration) {
-		this(configuration, false);
-	}
-
-	public Debug(Vulkan.Configuration configuration, boolean isRequired) {
-		configuration.plugins.add(this);
+	public Debug(boolean isRequired) {
 		this.isRequired = isRequired;
 	}
 
@@ -46,10 +41,6 @@ public class Debug implements Plugin {
 
 	public void setupLayers(LayerConfiguration configuration) {
 		configuration.setLayer("VK_LAYER_LUNARG_core_validation", LayerConfiguration.RequireType.REQUIRED);
-	}
-
-	public boolean canUsePhysicalDevice(PhysicalDevice physicalDevice) {
-		return true;
 	}
 
 	protected void info(int objectType, long object, long location, int messageCode, String pLayerString, String message, long pUserData) {
@@ -109,7 +100,7 @@ public class Debug implements Plugin {
 	public void setupCreateInfo(VkInstanceCreateInfo instanceCreateInfo) {
 	}
 
-	public void postCreate(VkInstance instance, ExtensionConfiguration extensionConfiguration, LayerConfiguration LayerConfiguration) {
+	public void postCreate(Vulkan vulkan, VkInstance instance, ExtensionConfiguration extensionConfiguration, LayerConfiguration LayerConfiguration) {
 		if (!extensionConfiguration.shouldHave("VK_EXT_debug_report")) return;
 
 		this.vkInstance = instance;

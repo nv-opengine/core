@@ -3,17 +3,19 @@ package com.gracefulcode.opengine.v2.vulkan;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.glfw.GLFWVulkan.*;
 import static org.lwjgl.system.MemoryUtil.*;
-import static org.lwjgl.vulkan.VK10.*;
 import static org.lwjgl.vulkan.EXTDebugReport.*;
 import static org.lwjgl.vulkan.KHRDisplaySwapchain.*;
 import static org.lwjgl.vulkan.KHRSurface.*;
 import static org.lwjgl.vulkan.KHRSwapchain.*;
+import static org.lwjgl.vulkan.VK10.*;
 
+import com.gracefulcode.opengine.v2.vulkan.plugins.interfaces.FiltersPhysicalDevices;
 import com.gracefulcode.opengine.v2.vulkan.plugins.Plugin;
 
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -75,8 +77,7 @@ public class Vulkan {
 
 		public ExtensionConfiguration extensionConfiguration = new ExtensionConfiguration();
 		public LayerConfiguration layerConfiguration = new LayerConfiguration();
-		public ArrayList<Plugin> plugins = new ArrayList<Plugin>();
-		public PhysicalDeviceSelector physicalDeviceSelector = new DefaultPhysicalDeviceSelector();
+		public PhysicalDeviceSelector<PhysicalDevice> physicalDeviceSelector = new DefaultPhysicalDeviceSelector();
 	}
 
 	/**
@@ -91,6 +92,16 @@ public class Vulkan {
 	 * only instance.
 	 */
 	protected static Vulkan instance;
+
+	protected static ArrayList<Plugin> plugins = new ArrayList<Plugin>();
+	protected static ArrayList<FiltersPhysicalDevices> filtersPhysicalDevices = new ArrayList<FiltersPhysicalDevices>();
+
+	public static void addPlugin(Plugin plugin) {
+		Vulkan.plugins.add(plugin);
+		if (plugin instanceof FiltersPhysicalDevices) {
+			Vulkan.filtersPhysicalDevices.add((FiltersPhysicalDevices)plugin);
+		}
+	}
 
 	/**
 	 * Initialize the vulkan singleton.
@@ -140,6 +151,15 @@ public class Vulkan {
 		this.configuration = configuration;
 		this.physicalDevices = new TreeSet<PhysicalDevice>(this.configuration.physicalDeviceSelector);
 
+		this.createInstance();
+		this.setupPhysicalDevices();
+
+		if (this.physicalDevices.size() == 0) {
+			throw new AssertionError("No suitable physical devices found.");
+		}
+	}
+
+	protected void createInstance() {
 		/**
 		 * appInfo is basic information about the application itself. There
 		 * isn't anything super important here, though we do let Vulkan know
@@ -166,7 +186,7 @@ public class Vulkan {
 		 * Allow plugins to modify this. I think there's some advanced way
 		 * that I can do debugging that uses this. Right now nothing uses it.
 		 */
-		for (Plugin plugin: this.configuration.plugins) {
+		for (Plugin plugin: Vulkan.plugins) {
 			plugin.setupCreateInfo(createInfo);
 		}
 
@@ -180,7 +200,7 @@ public class Vulkan {
 		}
 		this.configuration.extensionConfiguration.lock();
 
-		for (Plugin plugin: this.configuration.plugins) {
+		for (Plugin plugin: Vulkan.plugins) {
 			plugin.setupExtensions(this.configuration.extensionConfiguration);
 		}
 
@@ -207,15 +227,19 @@ public class Vulkan {
 		/**
 		 * Call the plugins after creation.
 		 */
-		for (Plugin plugin: this.configuration.plugins) {
-			plugin.postCreate(this.vkInstance, this.configuration.extensionConfiguration, this.configuration.layerConfiguration);
+		for (Plugin plugin: Vulkan.plugins) {
+			plugin.postCreate(this, this.vkInstance, this.configuration.extensionConfiguration, this.configuration.layerConfiguration);
 		}
 
+		memFree(ib);
+	}
+
+	protected void setupPhysicalDevices() {
 		/**
 		 * Get the physical devices that we have access to.
 		 */
-		ib = memAllocInt(1);
-		err = vkEnumeratePhysicalDevices(this.vkInstance, ib, null);
+		IntBuffer ib = memAllocInt(1);
+		int err = vkEnumeratePhysicalDevices(this.vkInstance, ib, null);
 		if (err != VK_SUCCESS) {
 			throw new AssertionError("Failed to get number of physical devices: " + Vulkan.translateVulkanResult(err));
 		}
@@ -234,8 +258,8 @@ public class Vulkan {
 			PhysicalDevice physicalDevice = new PhysicalDevice(physicalDeviceId, this.vkInstance);
 
 			boolean passedCheck = true;
-			for (Plugin plugin: this.configuration.plugins) {
-				if (!plugin.canUsePhysicalDevice(physicalDevice)) {
+			for (FiltersPhysicalDevices filter: Vulkan.filtersPhysicalDevices) {
+				if (!filter.canUsePhysicalDevice(physicalDevice)) {
 					passedCheck = false;
 					break;
 				}
@@ -248,12 +272,16 @@ public class Vulkan {
 		memFree(pPhysicalDevices);
 	}
 
+	public Collection<PhysicalDevice> getPhysicalDevices() {
+		return this.physicalDevices;
+	}
+
 	public VkInstance getVkInstance() {
 		return this.vkInstance;
 	}
 
 	public void dispose() {
-		for (Plugin plugin: this.configuration.plugins) {
+		for (Plugin plugin: Vulkan.plugins) {
 			plugin.dispose();
 		}
 		vkDestroyInstance(this.vkInstance, null);
