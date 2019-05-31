@@ -174,11 +174,11 @@ public class WindowManager implements Plugin, FiltersPhysicalDevices, NeedsQueue
 			if (b.presentMode.canTear() && !a.presentMode.canTear()) return -1;
 			if (a.presentMode.canTear() && !b.presentMode.canTear()) return 1;
 
-			comparison = Integer.compare(a.presentMode.buffering(), b.presentMode.buffering());
+			comparison = Integer.compare(b.presentMode.buffering(), a.presentMode.buffering());
 			if (comparison != 0) return comparison;
 
-			if (b.format.isSRGB() && !a.format.isSRGB()) return 1;
-			if (a.format.isSRGB() && !b.format.isSRGB()) return -1;
+			if (b.format.isSRGB() && !a.format.isSRGB()) return -1;
+			if (a.format.isSRGB() && !b.format.isSRGB()) return 1;
 
 			comparison = Integer.compare(b.format.channels(), a.format.channels());
 			if (comparison != 0) return comparison;
@@ -186,8 +186,11 @@ public class WindowManager implements Plugin, FiltersPhysicalDevices, NeedsQueue
 			comparison = Integer.compare(b.format.bitsPerChannel(), a.format.bitsPerChannel());
 			if (comparison != 0) return comparison;
 
-			comparison = Integer.compare(b.hashCode(), a.hashCode());
-			if (comparison != 0) return comparison;
+			if (a.graphicsQueue == a.presentQueue && b.graphicsQueue != b.presentQueue) return -1;
+			if (b.graphicsQueue == b.presentQueue && a.graphicsQueue != a.presentQueue) return 1;
+
+			// comparison = Integer.compare(b.hashCode(), a.hashCode());
+			// if (comparison != 0) return comparison;
 
 			return 0;
 		}
