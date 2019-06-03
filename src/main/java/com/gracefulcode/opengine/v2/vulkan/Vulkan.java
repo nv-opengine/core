@@ -10,6 +10,7 @@ import static org.lwjgl.vulkan.KHRSwapchain.*;
 import static org.lwjgl.vulkan.VK10.*;
 
 import com.gracefulcode.opengine.v2.vulkan.plugins.interfaces.FiltersPhysicalDevices;
+import com.gracefulcode.opengine.v2.vulkan.plugins.interfaces.NeedsQueues;
 import com.gracefulcode.opengine.v2.vulkan.plugins.Plugin;
 
 import java.nio.ByteBuffer;
@@ -23,10 +24,12 @@ import java.util.TreeSet;
 
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.vulkan.VkApplicationInfo;
+import org.lwjgl.vulkan.VkDeviceCreateInfo;
 import org.lwjgl.vulkan.VkExtensionProperties;
 import org.lwjgl.vulkan.VkInstance;
 import org.lwjgl.vulkan.VkInstanceCreateInfo;
 import org.lwjgl.vulkan.VkLayerProperties;
+import org.lwjgl.vulkan.VkPhysicalDeviceFeatures;
 
 /**
  * The main interface between end-user code and the Vulkan backend.
@@ -95,11 +98,15 @@ public class Vulkan {
 
 	protected static ArrayList<Plugin> plugins = new ArrayList<Plugin>();
 	protected static ArrayList<FiltersPhysicalDevices> filtersPhysicalDevices = new ArrayList<FiltersPhysicalDevices>();
+	protected static ArrayList<NeedsQueues> needsQueues = new ArrayList<NeedsQueues>();
 
 	public static void addPlugin(Plugin plugin) {
 		Vulkan.plugins.add(plugin);
 		if (plugin instanceof FiltersPhysicalDevices) {
 			Vulkan.filtersPhysicalDevices.add((FiltersPhysicalDevices)plugin);
+		}
+		if (plugin instanceof NeedsQueues) {
+			Vulkan.needsQueues.add((NeedsQueues)plugin);
 		}
 	}
 
@@ -156,6 +163,42 @@ public class Vulkan {
 
 		if (this.physicalDevices.size() == 0) {
 			throw new AssertionError("No suitable physical devices found.");
+		}
+
+		this.createLogicalDevice();
+	}
+
+	protected void createLogicalDevice() {
+		int compute = 0;
+		int graphics = 0;
+		int present = 0;
+
+		System.out.println("Creating logical device...");
+		for (NeedsQueues nq: Vulkan.needsQueues) {
+			if (nq.numGraphicsQueues() > graphics)
+				graphics = nq.numGraphicsQueues();
+			if (nq.numComputeQueues() > compute)
+				compute = nq.numComputeQueues();
+			if (nq.numPresentationQueues() > present)
+				present = nq.numPresentationQueues();
+		}
+
+		System.out.println("compute: " + compute + ", graphics: " + graphics + ", present: " + present);
+
+		/**
+		 * TODO: Plugins and/or the application should be able to set these.
+		 * Right now we're just using nothing.
+		 */
+		VkPhysicalDeviceFeatures features = VkPhysicalDeviceFeatures.calloc();
+
+		VkDeviceCreateInfo createInfo = VkDeviceCreateInfo.calloc();
+		createInfo.sType(VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO);
+		createInfo.pQueueCreateInfos();
+		createInfo.pEnabledFeatures(features);
+
+		int err = vkCreateDevice(physicalDevice, createInfo, null, device);
+		if (err != VK_SUCCESS) {
+			throw new AssertionError("Could not create logical device: " + Vulkan.translateVulkanResult(err));
 		}
 	}
 

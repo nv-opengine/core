@@ -81,7 +81,6 @@ public class PhysicalDevice {
 		VkQueueFamilyProperties.Buffer queueProps = VkQueueFamilyProperties.calloc(queueCount);
 		vkGetPhysicalDeviceQueueFamilyProperties(this.vkPhysicalDevice, ib, queueProps);
 
-		System.out.println("Queue Count:    " + queueCount);
 		int queueFamilyIndex;
 		for (queueFamilyIndex = 0; queueFamilyIndex < queueCount; queueFamilyIndex++) {
 			VkQueueFamilyProperties properties = queueProps.get(queueFamilyIndex);

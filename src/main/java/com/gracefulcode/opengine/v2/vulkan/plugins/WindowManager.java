@@ -345,12 +345,7 @@ public class WindowManager implements Plugin, FiltersPhysicalDevices, NeedsQueue
 				throw new AssertionError("Unable to get device surface capabilities: " + Vulkan.translateVulkanResult(err));
 			}
 
-			System.out.println("imageCount: " + surfaceCapabilities.minImageCount() + "-" + surfaceCapabilities.maxImageCount());
 			VkExtent2D extent = surfaceCapabilities.currentExtent();
-			System.out.println("extent: " + extent.width() + "," + extent.height());
-			System.out.println("max image array layers: " + surfaceCapabilities.maxImageArrayLayers());
-			System.out.println("supported composite alpha: " + surfaceCapabilities.supportedCompositeAlpha());
-			System.out.println("supported usage: " + surfaceCapabilities.supportedUsageFlags());
 
 			surfaceCapabilities.free();
 
@@ -410,7 +405,7 @@ public class WindowManager implements Plugin, FiltersPhysicalDevices, NeedsQueue
 			}
 		}
 
-		System.out.println(possibilities.toString());
+		// System.out.println(possibilities.toString());
 
 		return possibilities;
 	}
