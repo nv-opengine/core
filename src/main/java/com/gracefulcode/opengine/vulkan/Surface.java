@@ -1,4 +1,4 @@
-package com.gracefulcode.opengine.v2.vulkan;
+package com.gracefulcode.opengine.vulkan;
 
 import static org.lwjgl.glfw.GLFWVulkan.*;
 import static org.lwjgl.system.MemoryUtil.*;

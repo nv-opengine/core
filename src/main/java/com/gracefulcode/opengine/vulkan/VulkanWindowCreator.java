@@ -1,8 +1,8 @@
-package com.gracefulcode.opengine.v2.vulkan;
+package com.gracefulcode.opengine.vulkan;
 
 import static org.lwjgl.glfw.GLFW.*;
 
-import com.gracefulcode.opengine.v2.WindowCreator;
+import com.gracefulcode.opengine.WindowCreator;
 
 import org.lwjgl.glfw.GLFWKeyCallback;
 
@@ -13,7 +13,7 @@ import org.lwjgl.glfw.GLFWKeyCallback;
  * @version 0.1.1
  * @since 0.1
  */
-public class VulkanWindowCreator implements WindowCreator<com.gracefulcode.opengine.v2.Window> {
+public class VulkanWindowCreator implements WindowCreator<com.gracefulcode.opengine.Window> {
 	/**
 	 * The Vulkan instance that we are using.
 	 */

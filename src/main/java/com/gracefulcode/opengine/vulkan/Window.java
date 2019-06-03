@@ -1,8 +1,8 @@
-package com.gracefulcode.opengine.v2.vulkan;
+package com.gracefulcode.opengine.vulkan;
 
 import static org.lwjgl.glfw.GLFW.*;
 
-public class Window implements com.gracefulcode.opengine.v2.Window {
+public class Window implements com.gracefulcode.opengine.Window {
 	protected Vulkan vulkan;
 	protected long id;
 	protected Surface surface;

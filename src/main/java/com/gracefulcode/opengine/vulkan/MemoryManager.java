@@ -3,6 +3,8 @@ package com.gracefulcode.opengine.vulkan;
 import static org.lwjgl.system.MemoryUtil.*;
 import static org.lwjgl.vulkan.VK10.*;
 
+import com.gracefulcode.opengine.vulkan.Vulkan;
+
 import java.lang.Math;
 import java.nio.LongBuffer;
 import java.util.ArrayList;
