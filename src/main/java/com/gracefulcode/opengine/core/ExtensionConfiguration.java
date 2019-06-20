@@ -17,16 +17,9 @@ package com.gracefulcode.opengine.core;
  *     getConfiguredExtensions().
  */
 public interface ExtensionConfiguration<T, M> {
-	public static enum RequireType {
-		DONT_CARE,
-		NOT_DESIRED,
-		DESIRED,
-		REQUIRED
-	};
-
 	public void lock();
 	public T getConfiguredExtensions();
-	public void setExtension(M extension, RequireType required);
-	public RequireType getRequireType(M extension);
+	public void setExtension(M extension, Ternary required);
+	public Ternary getRequireType(M extension);
 	public boolean shouldHave(M extension);
 }

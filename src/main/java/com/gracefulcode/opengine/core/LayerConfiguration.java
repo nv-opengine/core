@@ -17,16 +17,9 @@ package com.gracefulcode.opengine.core;
  *     getConfiguredLayers().
  */
 public interface LayerConfiguration<T, M> {
-	public static enum RequireType {
-		DONT_CARE,
-		NOT_DESIRED,
-		DESIRED,
-		REQUIRED
-	};
-
 	public void lock();
 	public T getConfiguredLayers();
-	public void setLayer(M layer, RequireType required);
-	public RequireType getRequireType(M layer);
+	public void setLayer(M layer, Ternary required);
+	public Ternary getRequireType(M layer);
 	public boolean shouldHave(M layer);
 }
