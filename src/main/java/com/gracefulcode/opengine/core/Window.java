@@ -15,4 +15,6 @@ public interface Window {
 
 	public boolean shouldClose();
 	public void render();
+	public void resized(int width, int height);
+	public void mousePosition(double xpos, double ypos);
 }
